@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Partially Prescribed</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Rubik+Dirt&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --g:   #b4ff39;
+      --gd:  rgba(180,255,57,0.08);
+      --rd:  #ff2d2d;
+      --w1:  rgba(255,255,255,0.1);
+      --w06: rgba(255,255,255,0.06);
+      --w3:  rgba(255,255,255,0.3);
+    }
+
+    html, body { height: 100%; overflow: hidden; }
+
+    body {
+      background: #000;
+      color: #fff;
+      font-family: 'Space Mono', monospace;
+      overflow-x: hidden;
+      cursor: crosshair;
+      user-select: none;
+    }
+
+    /* ── GRAIN ── */
+    #grain {
+      position: fixed; inset: 0;
+      pointer-events: none;
+      z-index: 9000;
+      opacity: 0.045;
+      mix-blend-mode: overlay;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      z-index: 500;
+      padding: 20px 0 12px;
+      display: flex;
+      justify-content: center;
+      gap: 52px;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.92) 0%, transparent 100%);
+    }
+
+    .nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 5px;
+      cursor: pointer; background: none; border: none; padding: 0;
+    }
+
+    .nav-icon { width: 36px; height: 36px; transform-origin: center; filter: drop-shadow(0 0 4px rgba(180,255,57,0.28)); }
+    .nav-icon.s1 { animation: spin     3.2s linear infinite; }
+    .nav-icon.s2 { animation: spin-rev 4.1s linear infinite; }
+    .nav-icon.s3 { animation: spin     2.7s linear infinite; }
+    .nav-icon.s4 { animation: spin-rev 5.0s linear infinite; }
+
+    .nav-item:hover .nav-icon,
+    .nav-item.active .nav-icon {
+      animation-duration: 0.42s;
+      filter: drop-shadow(0 0 12px var(--g));
+    }
+
+    @keyframes spin     { to { transform: rotate( 360deg); } }
+    @keyframes spin-rev { to { transform: rotate(-360deg); } }
+
+    .nav-label {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 9px; letter-spacing: 4px;
+      color: var(--g);
+      opacity: 0; transform: translateY(-4px);
+      transition: opacity 0.18s, transform 0.18s;
+      white-space: nowrap; pointer-events: none;
+    }
+    .nav-item:hover .nav-label,
+    .nav-item.active .nav-label { opacity: 1; transform: translateY(0); }
+
+    /* ── PAGES ── */
+    .page {
+      position: fixed; inset: 0;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.35s ease;
+      overflow-y: auto;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: flex-start;
+    }
+    .page.active { opacity: 1; pointer-events: all; }
+
+    /* ── HERO PAGE ── */
+    #page-hero {
+      justify-content: center; align-items: center; overflow: hidden;
+    }
+    #page-hero::before {
+      content: '';
+      position: absolute; bottom: -100px; left: 50%; transform: translateX(-50%);
+      width: 800px; height: 400px;
+      background: radial-gradient(ellipse at center, rgba(180,255,57,0.045) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-eyebrow {
+      font-size: 0.55rem; letter-spacing: 0.35em; text-transform: uppercase;
+      color: var(--g); margin-bottom: 1.5rem; text-align: center;
+    }
+
+    .hero-title {
+      font-family: 'Rubik Dirt', sans-serif;
+      font-size: clamp(3.5rem, 11vw, 10rem);
+      line-height: 0.88;
+      text-align: center;
+    }
+
+    .ht1 {
+      display: block; color: #fff;
+      animation: flicker 9s 3s infinite;
+      position: relative; z-index: 2;
+    }
+    .ht1-ghost {
+      display: block; position: absolute; top: 0; left: 0; width: 100%;
+      color: var(--rd);
+      clip-path: polygon(0 35%, 100% 35%, 100% 55%, 0 55%);
+      animation: glitch-r 9s 3s infinite;
+      pointer-events: none;
+    }
+    .ht1-ghost2 {
+      display: block; position: absolute; top: 0; left: 0; width: 100%;
+      color: var(--g);
+      clip-path: polygon(0 70%, 100% 70%, 100% 85%, 0 85%);
+      animation: glitch-g 9s 3.08s infinite;
+      pointer-events: none;
+    }
+    .ht2 {
+      display: block;
+      -webkit-text-stroke: 2px rgba(255,255,255,0.7);
+      color: transparent;
+      position: relative; z-index: 2;
+    }
+
+    .hero-sub {
+      margin-top: 1.8rem;
+      display: flex; gap: 1.2rem; align-items: center;
+      justify-content: center; flex-wrap: wrap;
+    }
+    .sub-item {
+      font-size: 0.55rem; letter-spacing: 0.2em;
+      text-transform: uppercase; color: rgba(255,255,255,0.35);
+    }
+    .sub-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--g); opacity: 0.5; }
+
+    .hero-cta {
+      margin-top: 2.2rem;
+      display: flex; gap: 1rem;
+      justify-content: center; align-items: center; flex-wrap: wrap;
+    }
+
+    /* SC embed on hero */
+    .sc-hero-embed {
+      margin-top: 2rem;
+      width: min(480px, 90vw);
+    }
+    .sc-hero-embed iframe {
+      width: 100%; height: 166px; border: none; display: block;
+      opacity: 0.85;
+      transition: opacity 0.2s;
+    }
+    .sc-hero-embed iframe:hover { opacity: 1; }
+    .sc-hero-embed p {
+      margin-top: 0.5rem;
+      font-size: 0.48rem; letter-spacing: 0.18em;
+      text-transform: uppercase; color: rgba(255,255,255,0.12);
+      text-align: center;
+    }
+
+    /* ── BUTTONS ── */
+    .btn-solid {
+      display: inline-block;
+      padding: 0.8rem 2rem;
+      background: var(--g); color: #000;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem; font-weight: 700;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      text-decoration: none; border: none; cursor: pointer;
+      transition: transform 0.12s, box-shadow 0.12s, background 0.12s;
+    }
+    .btn-solid:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: 3px 3px 0 var(--g);
+      background: #fff;
+    }
+    .btn-ghost {
+      display: inline-block;
+      padding: 0.8rem 2rem;
+      border: 1px solid rgba(255,255,255,0.2);
+      color: rgba(255,255,255,0.55);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase;
+      text-decoration: none; background: none; cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .btn-ghost:hover { border-color: var(--g); color: var(--g); }
+
+
+
+    /* ── INNER PAGE WRAPPER ── */
+    .page-inner {
+      width: 100%; max-width: 1100px;
+      padding: 8rem 2.5rem 5rem;
+    }
+
+    .sec-label {
+      font-size: 0.55rem; letter-spacing: 0.4em;
+      text-transform: uppercase; color: var(--g);
+      margin-bottom: 2rem;
+      display: flex; align-items: center; gap: 1rem;
+    }
+    .sec-label::after {
+      content: ''; width: 50px; height: 1px;
+      background: var(--g); opacity: 0.4;
+    }
+
+    /* ── SHOWS PAGE ── */
+    .shows-head {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(3rem, 9vw, 7.5rem);
+      line-height: 0.92; letter-spacing: 0.03em;
+      margin-bottom: 4rem;
+    }
+    .shows-head em {
+      font-style: normal;
+      -webkit-text-stroke: 2px rgba(255,255,255,0.5);
+      color: transparent;
+    }
+
+    .show-row {
+      display: grid;
+      grid-template-columns: 90px 1fr auto auto;
+      align-items: center; gap: 2rem;
+      padding: 1.6rem 0;
+      border-top: 1px solid var(--w1);
+      text-decoration: none; color: inherit;
+      transition: padding-left 0.2s; cursor: pointer;
+    }
+    .show-row:last-child { border-bottom: 1px solid var(--w1); }
+    .show-row:hover { padding-left: 0.75rem; }
+    .show-row:hover .st { color: var(--g); }
+    .show-row:hover .sa { opacity: 1; color: var(--g); }
+
+    .sd { font-family: 'Bebas Neue', sans-serif; font-size: 1rem; letter-spacing: 0.1em; color: var(--g); }
+    .si { display: flex; flex-direction: column; gap: 5px; }
+    .st { font-family: 'Bebas Neue', sans-serif; font-size: 1.55rem; letter-spacing: 0.05em; transition: color 0.15s; }
+    .sv { font-size: 0.58rem; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.35); }
+    .stags { display: flex; gap: 6px; flex-wrap: wrap; }
+    .stag {
+      font-size: 0.5rem; letter-spacing: 0.12em; text-transform: uppercase;
+      padding: 3px 7px;
+      border: 1px solid rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.4);
+    }
+    .stag.live { border-color: var(--g); color: var(--g); }
+    .sa { font-size: 1rem; opacity: 0.15; transition: opacity 0.15s, color 0.15s; white-space: nowrap; }
+
+    /* ── ARTISTS PAGE (IG-style grid) ── */
+    .ig-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(3rem, 9vw, 7.5rem);
+      line-height: 0.92; letter-spacing: 0.03em;
+      margin-bottom: 3rem;
+    }
+    .ig-title em {
+      font-style: normal;
+      -webkit-text-stroke: 2px rgba(255,255,255,0.5);
+      color: transparent;
+    }
+
+    .ig-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 4px;
+    }
+    .ig-tile {
+      aspect-ratio: 1/1; position: relative;
+      overflow: hidden; cursor: pointer;
+      background: #0a0a0a; text-decoration: none;
+    }
+    .ig-tile-bg {
+      position: absolute; inset: -5%;
+      transition: transform 0.45s ease;
+    }
+    .ig-tile:hover .ig-tile-bg { transform: scale(1.1); }
+    .ig-tile-overlay {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,0);
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 6px;
+      transition: background 0.3s;
+    }
+    .ig-tile:hover .ig-tile-overlay { background: rgba(0,0,0,0.62); }
+    .ig-tile-meta { opacity: 0; text-align: center; transition: opacity 0.3s; pointer-events: none; }
+    .ig-tile:hover .ig-tile-meta { opacity: 1; }
+    .ig-tile-meta span {
+      display: block; font-size: 0.55rem;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: rgba(255,255,255,0.7);
+    }
+    .ig-tile-meta strong {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1rem; color: #fff; letter-spacing: 0.1em;
+    }
+    .ig-tile.vid::after {
+      content: '▶';
+      position: absolute; top: 0.6rem; right: 0.7rem;
+      font-size: 0.6rem; color: rgba(255,255,255,0.5);
+      pointer-events: none;
+    }
+    .ig-badge {
+      position: absolute; top: 0.6rem; left: 0.7rem;
+      font-size: 0.45rem; letter-spacing: 0.18em; text-transform: uppercase;
+      padding: 2px 6px;
+      border: 1px solid var(--g); color: var(--g);
+      pointer-events: none; background: rgba(0,0,0,0.6);
+    }
+    .ig-footer {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-top: 2rem; flex-wrap: wrap; gap: 1rem;
+    }
+    .ig-follow-note {
+      font-size: 0.58rem; letter-spacing: 0.15em;
+      text-transform: uppercase; color: rgba(255,255,255,0.2);
+    }
+
+    /* ── ABOUT PAGE ── */
+    .about-grid {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 6rem; align-items: start;
+    }
+    .stats { display: flex; flex-direction: column; gap: 2.5rem; }
+    .stat { border-left: 1.5px solid var(--g); padding-left: 1.25rem; }
+    .stat-n { font-family: 'Bebas Neue', sans-serif; font-size: 3rem; line-height: 1; color: var(--g); }
+    .stat-l { font-size: 0.55rem; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255,255,255,0.35); margin-top: 3px; }
+
+    .about-head {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(1.8rem, 3.5vw, 3rem);
+      line-height: 1.05; margin-bottom: 1.5rem;
+    }
+    .about-body { font-size: 0.7rem; line-height: 2; color: rgba(255,255,255,0.42); max-width: 580px; }
+    .about-body em { font-style: normal; color: rgba(180,255,57,0.85); }
+    .about-body p + p { margin-top: 1rem; }
+
+    /* ── BOOKING PAGE ── */
+    #page-booking { justify-content: center; align-items: center; }
+
+    .booking-wrap {
+      text-align: center; padding: 4rem 2.5rem;
+      position: relative; overflow: hidden; width: 100%;
+    }
+    .booking-glow {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, rgba(180,255,57,0.055) 0%, transparent 68%);
+      pointer-events: none;
+    }
+    .booking-title {
+      font-family: 'Rubik Dirt', sans-serif;
+      font-size: clamp(2.5rem, 9vw, 8rem);
+      line-height: 0.88; margin-bottom: 2rem;
+    }
+    .booking-sub {
+      font-size: 0.58rem; letter-spacing: 0.3em; text-transform: uppercase;
+      color: rgba(255,255,255,0.25); margin-bottom: 2rem;
+    }
+    .booking-email {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(0.9rem, 2.5vw, 1.6rem);
+      letter-spacing: 0.08em;
+      color: rgba(255,255,255,0.25);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding-bottom: 3px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .booking-email:hover { color: var(--g); border-color: var(--g); }
+    .socials { display: flex; justify-content: center; gap: 2.5rem; margin-top: 3rem; }
+    .soc {
+      font-size: 0.58rem; letter-spacing: 0.2em; text-transform: uppercase;
+      color: rgba(255,255,255,0.25); text-decoration: none; transition: color 0.2s;
+    }
+    .soc:hover { color: var(--g); }
+
+    /* ── BACK BTN ── */
+    .back-btn {
+      position: fixed; bottom: 32px; left: 2.5rem;
+      background: none; border: none;
+      color: rgba(255,255,255,0.2);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.58rem; letter-spacing: 0.2em; text-transform: uppercase;
+      cursor: pointer; z-index: 400;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.35s, color 0.2s;
+    }
+    .back-btn.visible { opacity: 1; pointer-events: all; }
+    .back-btn:hover { color: var(--g); }
+
+    /* ── KEYFRAMES ── */
+    @keyframes flicker {
+      0%, 88%, 90%, 92%, 100% { opacity: 1; }
+      89%, 91% { opacity: 0.93; }
+    }
+    @keyframes glitch-r {
+      0%, 84%, 89%, 100% { transform: translate(0); opacity: 0; }
+      85% { transform: translate(-5px, 1px); opacity: 0.7; }
+      86% { transform: translate(4px, -2px); opacity: 0.5; }
+      87%, 88% { transform: translate(0); opacity: 0; }
+    }
+    @keyframes glitch-g {
+      0%, 84%, 89%, 100% { transform: translate(0); opacity: 0; }
+      85% { transform: translate(6px, -1px); opacity: 0.6; }
+      86% { transform: translate(-3px, 2px); opacity: 0.4; }
+      87%, 88% { transform: translate(0); opacity: 0; }
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .ig-grid { grid-template-columns: repeat(3, 1fr); }
+      .ig-tile:nth-child(n+7) { display: none; }
+    }
+    @media (max-width: 768px) {
+      .page-inner { padding: 6rem 1.5rem 4rem; }
+      .about-grid { grid-template-columns: 1fr; gap: 3rem; }
+      .show-row { grid-template-columns: 70px 1fr; gap: 1rem; }
+      .stags, .sa { display: none; }
+      nav { gap: 32px; }
+      .back-btn { left: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="grain"></canvas>
+
+<!-- ── NAV ── -->
+<nav>
+
+  <button class="nav-item" data-target="shows">
+    <img src="spinning_logo.gif" alt="Logo" width="50px" class="nav-icon s1">
+    <!-- <circle cx="20" cy="7" r="3.2" stroke="#b4ff39" stroke-width="1.4"/>
+      <line x1="20" y1="10.2" x2="20" y2="23" stroke="#b4ff39" stroke-width="1.4"/>
+      <line x1="20" y1="15"   x2="11" y2="10" stroke="#b4ff39" stroke-width="1.4"/>
+      <line x1="20" y1="15"   x2="29" y2="19" stroke="#b4ff39" stroke-width="1.4"/>
+      <line x1="20" y1="23"   x2="13" y2="34" stroke="#b4ff39" stroke-width="1.4"/>
+      <line x1="20" y1="23"   x2="27" y2="34" stroke="#b4ff39" stroke-width="1.4"/>
+      <circle cx="8"  cy="7"  r="1.2" fill="#b4ff39" opacity="0.5"/>
+      <circle cx="33" cy="30" r="1"   fill="#b4ff39" opacity="0.4"/>
+    </svg> -->
+    <span class="nav-label">SHOWS</span>
+  </button>
+
+  <!-- <button class="nav-item" data-target="artists">
+            <img src="spinning_logo.gif" alt="Logo" class="nav-icon s1">
+    <span class="nav-label">ARTISTS</span>
+  </button> -->
+
+  <button class="nav-item" data-target="about">
+    <img src="spinning_logo.gif" alt="Logo" width="50px" class="nav-icon s1">
+    <!-- <svg class="nav-icon s3" viewBox="0 0 40 40" fill="none">
+      <circle cx="22" cy="6"  r="3.2" stroke="#b4ff39" stroke-width="1.4"/>
+      <line x1="22" y1="9.2"  x2="17" y2="21" stroke="#b4ff39" stroke-width="1.4"/>
+      <line x1="19" y1="15"   x2="10" y2="19" stroke="#b4ff39" stroke-width="1.4"/>
+      <line x1="19" y1="15"   x2="30" y2="11" stroke="#b4ff39" stroke-width="1.4"/>
+      <line x1="17" y1="21"   x2="9"  y2="31" stroke="#b4ff39" stroke-width="1.4"/>
+      <line x1="17" y1="21"   x2="28" y2="29" stroke="#b4ff39" stroke-width="1.4"/>
+      <line x1="4"  y1="4"    x2="8"  y2="8"  stroke="#b4ff39" stroke-width="1"/>
+      <line x1="8"  y1="4"    x2="4"  y2="8"  stroke="#b4ff39" stroke-width="1"/>
+    </svg> -->
+    <span class="nav-label">SOUNDS</span>
+  </button>
+
+  <button class="nav-item" data-target="booking">
+         <img src="spinning_logo.gif" alt="Logo" width="50px" class="nav-icon s1">
+    <!-- <svg class="nav-icon s4" viewBox="0 0 40 40" fill="none"> 
+      <circle cx="20" cy="8"  r="3.2" stroke="#b4ff39" stroke-width="1.4"/>
+      <line x1="20" y1="11.2" x2="20" y2="24" stroke="#b4ff39" stroke-width="1.4"/>
+      <line x1="20" y1="16"   x2="11" y2="12" stroke="#b4ff39" stroke-width="1.4"/>
+      <line x1="20" y1="16"   x2="29" y2="12" stroke="#b4ff39" stroke-width="1.4"/>
+      <line x1="20" y1="24"   x2="12" y2="35" stroke="#b4ff39" stroke-width="1.4"/>
+      <line x1="20" y1="24"   x2="28" y2="35" stroke="#b4ff39" stroke-width="1.4"/>
+      <circle cx="7"  cy="22" r="1.4" fill="#b4ff39" opacity="0.6"/>
+      <circle cx="35" cy="10" r="1.4" fill="#b4ff39" opacity="0.6"/>
+      <circle cx="33" cy="37" r="1"   fill="#b4ff39" opacity="0.35"/>
+    </svg> -->
+    <span class="nav-label">BOOKING</span>
+  </button>
+
+</nav>
+
+<!-- ── PAGE: HERO ── -->
+<div class="page active" id="page-hero">
+  <div>
+    <h1 class="hero-title">
+      <span style="position:relative;display:inline-block">
+        <span class="ht1">Partially</span>
+        <span class="ht1-ghost"  aria-hidden="true">Partially</span>
+        <span class="ht1-ghost2" aria-hidden="true">Partially</span>
+      </span>
+      <span class="ht2">Prescribed</span>
+    </h1>
+    <div class="hero-sub">
+      <span class="sub-item">Beat Production</span>
+      <span class="sub-dot"></span>
+      <span class="sub-item">Event Coordination</span>
+      <span class="sub-dot"></span>
+      <span class="sub-item">LA / AZ</span>
+    </div>
+    <div style="display:flex;justify-content:center;">
+      <div class="sc-hero-embed">
+        <iframe id="sc-iframe" scrolling="no" frameborder="no" allow="autoplay"
+          src="https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/partiallyprescribed&color=%23b4ff39&auto_play=true&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=false">
+        </iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── PAGE: SHOWS ── -->
+<div class="page" id="page-shows">
+  <div class="page-inner">
+    <h2 class="shows-head"><br><em>SHOWS</em></h2>
+    <a href="#" class="show-row">
+      <span class="sd">MAR 13</span>
+      <div class="si">
+        <span class="st">LACKVILL + BLACKEDY</span>
+        <span class="sv">Bricks Rock Bar — Los Angeles, CA &nbsp;·&nbsp; 7PM–12AM</span>
+      </div>
+      <div class="stags">
+        <span class="stag live">Tickets Live</span>
+        <span class="stag">All Ages · Bar 21+</span>
+      </div>
+      <span class="sa">→</span>
+    </a>
+
+    <a href="#" class="show-row">
+      <span class="sd">APR 04</span>
+      <div class="si">
+        <span class="st">FIRST FRIDAY VOL. 2</span>
+        <span class="sv">TBA — Phoenix, AZ</span>
+      </div>
+      <div class="stags">
+        <span class="stag">Announce Soon</span>
+        <span class="stag">Underground</span>
+      </div>
+      <span class="sa">→</span>
+    </a>
+
+    <a href="#" class="show-row">
+      <span class="sd">TBA</span>
+      <div class="si">
+        <span class="st">SUBIIBABI SHOWCASE</span>
+        <span class="sv">Los Angeles, CA</span>
+      </div>
+      <div class="stags">
+        <span class="stag">Stay Tuned</span>
+      </div>
+      <span class="sa">→</span>
+    </a>
+
+    <a href="#" class="show-row">
+      <span class="sd">TBA</span>
+      <div class="si">
+        <span class="st">YARO + KIDSUBI</span>
+        <span class="sv">Arizona</span>
+      </div>
+      <div class="stags">
+        <span class="stag">Stay Tuned</span>
+      </div>
+      <span class="sa">→</span>
+    </a>
+
+  </div>
+</div>
+
+<!-- ── PAGE: ARTISTS ── -->
+<div class="page" id="page-artists">
+  <div class="page-inner">
+    <p class="sec-label">The Scene</p>
+    <h2 class="ig-title">THE<br><em>ARTISTS</em></h2>
+    <div class="ig-grid" id="igGrid"></div>
+    <div class="ig-footer">
+      <span class="ig-follow-note">Latest from the scene · Follow on IG</span>
+      <a href="https://instagram.com/partiallyprescribed" class="btn-ghost" target="_blank">@partiallyprescribed ↗</a>
+    </div>
+  </div>
+</div>
+
+<!-- ── PAGE: ABOUT ── -->
+<div class="page" id="page-about">
+  <div class="page-inner">
+    <!-- <div class="about-grid"> -->
+      <!-- <div class="stats">
+        <div class="stat">
+          <div class="stat-n">40–50</div>
+          <div class="stat-l">Intimate cap.</div>
+        </div>
+        <div class="stat">
+          <div class="stat-n">2</div>
+          <div class="stat-l">Active markets</div>
+        </div>
+        <div class="stat">
+          <div class="stat-n">∞</div>
+          <div class="stat-l">Unreleased beats</div>
+        </div>
+      </div> -->
+      <div>
+        <p class="sec-label">Sounds</p>
+        <h2 class="about-head">MUSIC + EVENTS.<br>UNDERGROUND ONLY.</h2>
+        <div class="about-body">
+          <p>
+            <em>Partially Prescribed</em> is a beat production project and underground
+            event collective. Small shows. Real rooms.
+            Artists you know and ones to discover
+          </p>
+          <p>
+            The name is honest. <em>Plugg. Cloud rap. Ambient trap.</em> The tag changes.
+            The vibe doesn't.
+          </p>
+          <p>
+            If you found this page,
+            you're probably already tapped in. <em>Welcome to the network</em>
+          </p>
+        </div>
+      </div>
+    <!-- </div> -->
+  </div>
+</div>
+
+<!-- ── PAGE: BOOKING ── -->
+<div class="page" id="page-booking">
+  <div class="booking-wrap">
+    <div class="booking-glow"></div>
+    <h2 class="booking-title">WORK<br>WITH US</h2>
+    <p class="booking-sub">Booking · Licensing · Artist Collabs · Press</p>
+    <a href="mailto:booking@partiallyprescribed.com" class="booking-email">
+      BOOKING@PARTIALLYPRESCRIBED.COM
+    </a>
+    <div class="socials">
+      <a href="https://instagram.com/partiallyprescribed" class="soc" target="_blank">Instagram</a>
+      <a href="https://soundcloud.com/partiallyprescribed" class="soc" target="_blank">SoundCloud</a>
+      <a href="#" class="soc">MyPlots</a>
+    </div>
+  </div>
+</div>
+
+<!-- ── BACK BTN ── -->
+<button class="back-btn" id="back-btn">← Back</button>
+
+
+
+<script>
+// ── GRAIN ──
+(function(){
+  var c = document.getElementById('grain');
+  var ctx = c.getContext('2d');
+  function resize(){ c.width = window.innerWidth; c.height = window.innerHeight; }
+  resize();
+  window.addEventListener('resize', resize);
+  function draw(){
+    var w = c.width, h = c.height;
+    var img = ctx.createImageData(w, h);
+    var d = img.data;
+    for(var i = 0; i < d.length; i += 4){
+      var v = Math.random() * 255 | 0;
+      d[i] = v; d[i+1] = v; d[i+2] = v; d[i+3] = 255;
+    }
+    ctx.putImageData(img, 0, 0);
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ── PAGE ROUTING ──
+var pages = {
+  hero:    document.getElementById('page-hero'),
+  shows:   document.getElementById('page-shows'),
+  artists: document.getElementById('page-artists'),
+  about:   document.getElementById('page-about'),
+  booking: document.getElementById('page-booking'),
+};
+var navItems = document.querySelectorAll('.nav-item[data-target]');
+var backBtn  = document.getElementById('back-btn');
+var current  = 'hero';
+
+function navigate(target){
+  if(target === current) return;
+  pages[current].classList.remove('active');
+  navItems.forEach(function(n){ n.classList.remove('active'); });
+  pages[target].classList.add('active');
+  current = target;
+  if(target === 'hero'){
+    backBtn.classList.remove('visible');
+  } else {
+    backBtn.classList.add('visible');
+    var match = Array.from(navItems).find(function(n){ return n.dataset.target === target; });
+    if(match) match.classList.add('active');
+  }
+}
+
+navItems.forEach(function(btn){
+  btn.addEventListener('click', function(){ navigate(btn.dataset.target); });
+});
+backBtn.addEventListener('click', function(){ navigate('hero'); });
+document.getElementById('hero-shows-btn').addEventListener('click', function(){ navigate('shows'); });
+
+
+
+// ── SOUNDCLOUD AUTOPLAY ON FIRST INTERACTION ──
+// Browsers block audio autoplay until a user gesture occurs.
+// We load the SC Widget API, attempt immediate play (works for
+// return visitors), then fire play() on the very first interaction.
+(function(){
+  var apiScript = document.createElement('script');
+  apiScript.src = 'https://w.soundcloud.com/player/api.js';
+  apiScript.onload = function(){
+    var iframe = document.getElementById('sc-iframe');
+    if(!iframe) return;
+    var widget = SC.Widget(iframe);
+    var played = false;
+
+    widget.bind(SC.Widget.Events.READY, function(){
+      // Attempt immediate play — succeeds on return visits or
+      // sites with high browser Media Engagement Index
+      widget.play();
+
+      // Fallback: fire on first gesture anywhere on the page
+      function onGesture(){
+        if(played) return;
+        played = true;
+        widget.play();
+        ['click','keydown','touchstart','scroll'].forEach(function(ev){
+          document.removeEventListener(ev, onGesture);
+        });
+      }
+      ['click','keydown','touchstart','scroll'].forEach(function(ev){
+        document.addEventListener(ev, onGesture, { once: true, passive: true });
+      });
+    });
+  };
+  document.head.appendChild(apiScript);
+})();
+(function(){
+  var posts = [
+    { type:'vid',  badge:'Show',  label:'LACKVILL + BLACKEDY', sub:'Mar 13 · LA',
+      grad:'radial-gradient(ellipse at 30% 20%, #1a0e2e, #000)' },
+    { type:'img',               label:'BRICKS ROCK BAR',       sub:'Flash shot',
+      grad:'radial-gradient(ellipse at 60% 40%, #0d1a0d, #000)' },
+    { type:'vid',               label:'CROWD POV',             sub:'AZ show',
+      grad:'radial-gradient(ellipse at 50% 60%, #1a0a0a, #000)' },
+    { type:'img',  badge:'Event', label:'LACKVILL IN LA',      sub:'Flyer · 03/13',
+      grad:'radial-gradient(ellipse at 20% 80%, #0e1a1a, #000)' },
+    { type:'img',               label:'KIDSUBI',               sub:'Portrait',
+      grad:'radial-gradient(ellipse at 70% 30%, #111111, #000)' },
+    { type:'vid',               label:'STAGE POV',             sub:'Best underground show in AZ',
+      grad:'radial-gradient(ellipse at 40% 50%, #1a1500, #000)' },
+    { type:'img',  badge:'Show', label:'FENIX',                sub:'Performance',
+      grad:'radial-gradient(ellipse at 55% 25%, #0a0f1a, #000)' },
+    { type:'img',               label:'SUBIIBABI',             sub:'Session',
+      grad:'radial-gradient(ellipse at 30% 70%, #120a18, #000)' },
+    { type:'vid',  badge:'Event', label:'YARO',                sub:'Arizona',
+      grad:'radial-gradient(ellipse at 65% 55%, #0d150d, #000)' },
+    { type:'img',               label:'FIRST FRIDAY',          sub:'Vol. 1 Recap',
+      grad:'radial-gradient(ellipse at 45% 35%, #1a0f0a, #000)' },
+  ];
+
+  var grid = document.getElementById('igGrid');
+  if(!grid) return;
+
+  posts.forEach(function(p){
+    var a = document.createElement('a');
+    a.href = 'https://instagram.com/partiallyprescribed';
+    a.target = '_blank';
+    a.className = 'ig-tile' + (p.type === 'vid' ? ' vid' : '');
+    var op = p.type === 'vid' ? '0.07' : '0.09';
+    a.innerHTML =
+      '<div class="ig-tile-bg" style="background:' + p.grad + ';position:absolute;inset:-5%">' +
+        '<svg viewBox="0 0 100 160" style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:60%;opacity:' + op + '" xmlns="http://www.w3.org/2000/svg">' +
+          '<circle cx="50" cy="48" r="28" fill="#fff"/>' +
+          '<ellipse cx="50" cy="130" rx="38" ry="50" fill="#fff"/>' +
+        '</svg>' +
+      '</div>' +
+      (p.badge ? '<span class="ig-badge">' + p.badge + '</span>' : '') +
+      '<div class="ig-tile-overlay">' +
+        '<div class="ig-tile-meta">' +
+          '<strong>' + p.label + '</strong>' +
+          '<span>' + p.sub + '</span>' +
+        '</div>' +
+      '</div>';
+    grid.appendChild(a);
+  });
+})();
+</script>
+
+</body>
+</html>
