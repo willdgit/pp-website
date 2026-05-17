@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Partially Prescribed</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik+Wet+Paint&family=Share+Tech+Mono&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --black: #040404;
+      --green: #45ff35;
+      --green-glow: rgba(69, 255, 53, 0.35);
+      --white: #ededed;
+      --dim: #555;
+      --border: #141414;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      background: var(--black);
+      color: var(--white);
+      font-family: 'Share Tech Mono', monospace;
+      overflow-x: hidden;
+      cursor: crosshair;
+    }
+
+    /* Grain */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9000;
+      opacity: 0.5;
+    }
+
+    /* Scanlines */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 3px,
+        rgba(0,0,0,0.06) 3px, rgba(0,0,0,0.06) 4px
+      );
+      pointer-events: none;
+      z-index: 8999;
+    }
+
+    /* ─── NAV ─── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 500;
+      padding: 22px 0 14px;
+      display: flex;
+      justify-content: center;
+      gap: 56px;
+      background: linear-gradient(to bottom, rgba(4,4,4,0.92) 0%, transparent 100%);
+    }
+
+    .nav-item {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      text-decoration: none;
+      background: none;
+      border: none;
+      padding: 0;
+    }
+
+    .nav-icon {
+      width: 38px;
+      height: 38px;
+      filter: drop-shadow(0 0 5px var(--green-glow));
+      transform-origin: center;
+    }
+
+    .nav-icon.s1 { animation: spin     3.2s linear infinite; }
+    .nav-icon.s2 { animation: spin-rev 4.1s linear infinite; }
+    .nav-icon.s3 { animation: spin     2.7s linear infinite; }
+    .nav-icon.s4 { animation: spin-rev 5.0s linear infinite; }
+
+    .nav-item:hover .nav-icon,
+    .nav-item.active .nav-icon {
+      animation-duration: 0.5s;
+      filter: drop-shadow(0 0 14px var(--green));
+    }
+
+    @keyframes spin     { to { transform: rotate( 360deg); } }
+    @keyframes spin-rev { to { transform: rotate(-360deg); } }
+
+    .nav-label {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 10px;
+      letter-spacing: 4px;
+      color: var(--green);
+      opacity: 0;
+      transform: translateY(-5px);
+      transition: opacity 0.18s ease, transform 0.18s ease;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .nav-item:hover .nav-label,
+    .nav-item.active .nav-label {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ─── PAGES ─── */
+    .page {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease;
+      overflow-y: auto;
+    }
+
+    .page.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    /* ─── HERO ─── */
+    #page-hero { overflow: hidden; }
+
+    #page-hero::before {
+      content: '';
+      position: absolute;
+      bottom: -80px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 700px;
+      height: 300px;
+      background: radial-gradient(ellipse at center, rgba(69,255,53,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .logo-wrap { text-align: center; }
+
+    .logo-line {
+      display: block;
+      font-family: 'Rubik Wet Paint', cursive;
+      line-height: 0.88;
+      letter-spacing: -1px;
+    }
+
+    .logo-line.l1 {
+      font-size: clamp(64px, 11vw, 120px);
+      color: transparent;
+      -webkit-text-stroke: 2px var(--white);
+      animation: flicker 9s ease-in-out infinite;
+    }
+
+    .logo-line.l2 {
+      font-size: clamp(54px, 9.5vw, 104px);
+      color: transparent;
+      -webkit-text-stroke: 2px var(--green);
+      text-shadow: 0 0 40px rgba(69,255,53,0.15);
+      animation: flicker 9s ease-in-out infinite 0.6s;
+    }
+
+    @keyframes flicker {
+      0%, 93%, 100% { opacity: 1; }
+      94%  { opacity: 0.78; }
+      95%  { opacity: 1; }
+      97%  { opacity: 0.6; }
+      98%  { opacity: 0.95; }
+    }
+
+    .hero-sub {
+      margin-top: 36px;
+      font-size: 10px;
+      letter-spacing: 9px;
+      color: var(--dim);
+    }
+
+    /* ─── INNER PAGES ─── */
+    .page-inner {
+      width: 100%;
+      max-width: 1100px;
+      padding: 110px 64px 64px;
+    }
+
+    .sec-head {
+      display: flex;
+      align-items: baseline;
+      gap: 18px;
+      margin-bottom: 56px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sec-num {
+      font-size: 11px;
+      letter-spacing: 3px;
+      color: var(--green);
+    }
+
+    .sec-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(44px, 7vw, 88px);
+      letter-spacing: 5px;
+      line-height: 1;
+    }
+
+    /* ─── ARTISTS ─── */
+    .artists-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 2px;
+    }
+
+    .artist-card {
+      position: relative;
+      aspect-ratio: 3/4;
+      overflow: hidden;
+      cursor: crosshair;
+    }
+
+    .artist-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(4,4,4,0.92) 0%, transparent 55%);
+      z-index: 1;
+    }
+
+    .artist-bg {
+      width: 100%;
+      height: 100%;
+      background: #0c0c0c;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: filter 0.3s;
+      position: relative;
+    }
+
+    .artist-bg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.012) 2px, rgba(255,255,255,0.012) 4px);
+    }
+
+    .artist-card:hover .artist-bg { filter: brightness(1.4) contrast(1.15); }
+
+    .artist-info {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 22px;
+      z-index: 2;
+    }
+
+    .artist-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 30px;
+      letter-spacing: 2px;
+    }
+
+    .artist-genre {
+      font-size: 9px;
+      letter-spacing: 4px;
+      color: var(--green);
+      margin-top: 4px;
+    }
+
+    /* ─── SHOWS ─── */
+    .show-row {
+      display: grid;
+      grid-template-columns: 70px 1fr auto;
+      align-items: center;
+      gap: 40px;
+      padding: 26px 0;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      position: relative;
+    }
+
+    .show-row::before {
+      content: '';
+      position: absolute;
+      left: -64px; right: -64px;
+      top: 0; bottom: 0;
+      background: transparent;
+      transition: background 0.2s;
+      z-index: -1;
+    }
+
+    .show-row:hover::before { background: rgba(69,255,53,0.025); }
+    .show-row:hover .show-title { color: var(--green); }
+
+    .show-date {
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--green);
+      line-height: 1.8;
+      text-transform: uppercase;
+    }
+
+    .show-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 34px;
+      letter-spacing: 3px;
+      transition: color 0.2s;
+    }
+
+    .show-venue {
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: var(--dim);
+      margin-top: 5px;
+    }
+
+    .show-right { text-align: right; }
+
+    .show-tag {
+      display: inline-block;
+      border: 1px solid #222;
+      padding: 5px 12px;
+      font-size: 9px;
+      letter-spacing: 3px;
+      color: var(--dim);
+      margin-top: 8px;
+    }
+
+    .show-row.upcoming .show-tag {
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    /* ─── ABOUT ─── */
+    .about-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+    }
+
+    .about-text p {
+      font-size: 13px;
+      line-height: 2;
+      color: #888;
+      margin-bottom: 18px;
+    }
+
+    .about-text strong { color: var(--white); }
+
+    .sc-link {
+      display: inline-block;
+      margin-top: 24px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 15px;
+      letter-spacing: 5px;
+      color: var(--green);
+      text-decoration: none;
+      border-bottom: 1px solid var(--green);
+      padding-bottom: 2px;
+      transition: opacity 0.2s;
+    }
+    .sc-link:hover { opacity: 0.55; }
+
+    .about-box {
+      aspect-ratio: 1;
+      background: #080808;
+      border: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .about-box::before {
+      content: 'PP';
+      font-family: 'Rubik Wet Paint', cursive;
+      font-size: 200px;
+      color: transparent;
+      -webkit-text-stroke: 1px #141414;
+      position: absolute;
+      user-select: none;
+    }
+
+    .about-stat {
+      position: absolute;
+      font-family: 'Bebas Neue', sans-serif;
+    }
+    .about-stat:first-of-type { top: 28px; left: 28px; }
+    .about-stat:last-of-type  { bottom: 28px; right: 28px; text-align: right; }
+
+    .stat-big {
+      font-size: 58px;
+      color: var(--green);
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 9px;
+      letter-spacing: 4px;
+      color: var(--dim);
+      margin-top: 4px;
+    }
+
+    /* ─── CONTACT ─── */
+    .contact-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+    }
+
+    .contact-block h3 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 5px;
+      margin-bottom: 14px;
+    }
+
+    .contact-block p {
+      font-size: 11px;
+      color: var(--dim);
+      letter-spacing: 2px;
+      line-height: 2.2;
+    }
+
+    .contact-block a {
+      color: var(--green);
+      text-decoration: none;
+    }
+
+    .cf { display: flex; flex-direction: column; gap: 18px; }
+
+    .cf-field { display: flex; flex-direction: column; gap: 6px; }
+
+    .cf-field label {
+      font-size: 8px;
+      letter-spacing: 5px;
+      color: var(--dim);
+      text-transform: uppercase;
+    }
+
+    .cf-field input,
+    .cf-field textarea {
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid #1e1e1e;
+      color: var(--white);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 13px;
+      padding: 10px 0;
+      outline: none;
+      resize: none;
+      transition: border-color 0.2s;
+    }
+
+    .cf-field input:focus,
+    .cf-field textarea:focus { border-bottom-color: var(--green); }
+
+    .cf-field input::placeholder,
+    .cf-field textarea::placeholder { color: #222; }
+
+    .send-btn {
+      align-self: flex-start;
+      margin-top: 8px;
+      background: transparent;
+      border: 1px solid var(--green);
+      color: var(--green);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 15px;
+      letter-spacing: 7px;
+      padding: 12px 30px;
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+
+    .send-btn:hover {
+      background: var(--green);
+      color: var(--black);
+    }
+
+    /* ─── BACK BTN ─── */
+    .back-btn {
+      position: fixed;
+      bottom: 36px;
+      left: 64px;
+      background: none;
+      border: none;
+      color: var(--dim);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 4px;
+      cursor: pointer;
+      transition: color 0.2s;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease, color 0.2s;
+      z-index: 400;
+    }
+
+    .back-btn.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .back-btn:hover { color: var(--white); }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 768px) {
+      .page-inner { padding: 100px 28px 80px; }
+      .about-layout, .contact-layout { grid-template-columns: 1fr; gap: 48px; }
+      .show-row { grid-template-columns: 55px 1fr; }
+      .show-right { display: none; }
+      nav { gap: 32px; }
+      .back-btn { left: 28px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ─── NAV ─── -->
+<nav>
+
+  <button class="nav-item" data-target="artists">
+    <img src="spinning_logo.gif" class="nav-icon">
+
+    <!-- <svg class="nav-icon s1" viewBox="0 0 40 40" fill="none">
+      <circle cx="20" cy="7" r="3.2" stroke="#45ff35" stroke-width="1.4"/>
+      <line x1="20" y1="10.2" x2="20" y2="23" stroke="#45ff35" stroke-width="1.4"/>
+      <line x1="20" y1="15"   x2="11" y2="10" stroke="#45ff35" stroke-width="1.4"/>
+      <line x1="20" y1="15"   x2="29" y2="19" stroke="#45ff35" stroke-width="1.4"/>
+      <line x1="20" y1="23"   x2="13" y2="34" stroke="#45ff35" stroke-width="1.4"/>
+      <line x1="20" y1="23"   x2="27" y2="34" stroke="#45ff35" stroke-width="1.4"/>
+      <circle cx="8"  cy="7"  r="1.2" fill="#45ff35" opacity="0.55"/>
+      <circle cx="33" cy="30" r="1"   fill="#45ff35" opacity="0.4"/>
+    </svg> -->
+    <span class="nav-label">ARTISTS</span>
+  </button>
+
+  <button class="nav-item" data-target="shows">
+        <img src="spinning_logo.gif" class="nav-icon">
+    <!-- <svg class="nav-icon s2" viewBox="0 0 40 40" fill="none">
+      <circle cx="20" cy="7" r="3.2" stroke="#45ff35" stroke-width="1.4"/>
+      <line x1="20" y1="10.2" x2="20" y2="23" stroke="#45ff35" stroke-width="1.4"/>
+      <line x1="20" y1="14"   x2="9"  y2="14" stroke="#45ff35" stroke-width="1.4"/>
+      <line x1="20" y1="14"   x2="31" y2="14" stroke="#45ff35" stroke-width="1.4"/>
+      <line x1="9"  y1="14"   x2="6"  y2="22" stroke="#45ff35" stroke-width="1.2"/>
+      <line x1="31" y1="14"   x2="34" y2="22" stroke="#45ff35" stroke-width="1.2"/>
+      <line x1="20" y1="23"   x2="13" y2="34" stroke="#45ff35" stroke-width="1.4"/>
+      <line x1="20" y1="23"   x2="27" y2="34" stroke="#45ff35" stroke-width="1.4"/>
+    </svg> -->
+    <span class="nav-label">SHOWS</span>
+  </button>
+
+  <button class="nav-item" data-target="about">
+    <img src="spinning_logo.gif" class="nav-icon">
+    <span class="nav-label">ABOUT</span>
+  </button>
+
+  <button class="nav-item" data-target="contact">
+    <img src="spinning_logo.gif" class="nav-icon">
+    <span class="nav-label">CONTACT</span>
+  </button>
+
+</nav>
+
+<!-- ─── PAGE: HERO ─── -->
+<div class="page active" id="page-hero">
+  <div class="logo-wrap">
+    <span class="logo-line l1">Partially</span>
+    <span class="logo-line l2">Prescribed</span>
+    <p class="hero-sub">L.A. &nbsp;·&nbsp; Arizona &nbsp;·&nbsp; Underground</p>
+  </div>
+</div>
+
+<!-- ─── PAGE: ARTISTS ─── -->
+<div class="page" id="page-artists">
+  <div class="page-inner">
+    <div class="sec-head">
+      <span class="sec-num">01 //</span>
+      <h2 class="sec-title">Artists</h2>
+    </div>
+    <div class="artists-grid">
+
+      <div class="artist-card">
+        <div class="artist-bg">
+          <svg width="70" height="70" viewBox="0 0 40 40" fill="none">
+            <circle cx="20" cy="7" r="3.5" stroke="#1e1e1e" stroke-width="2"/>
+            <line x1="20" y1="10.5" x2="20" y2="23" stroke="#1e1e1e" stroke-width="2"/>
+            <line x1="20" y1="15"   x2="11" y2="10" stroke="#1e1e1e" stroke-width="2"/>
+            <line x1="20" y1="15"   x2="29" y2="19" stroke="#1e1e1e" stroke-width="2"/>
+            <line x1="20" y1="23"   x2="13" y2="34" stroke="#1e1e1e" stroke-width="2"/>
+            <line x1="20" y1="23"   x2="27" y2="34" stroke="#1e1e1e" stroke-width="2"/>
+          </svg>
+        </div>
+        <div class="artist-info">
+          <div class="artist-name">LACKVILL</div>
+          <div class="artist-genre">PLUGG · CLOUD RAP</div>
+        </div>
+      </div>
+
+      <div class="artist-card">
+        <div class="artist-bg" style="background:#0e0e0e;">
+          <svg width="70" height="70" viewBox="0 0 40 40" fill="none">
+            <circle cx="20" cy="7" r="3.5" stroke="#1e1e1e" stroke-width="2"/>
+            <line x1="20" y1="10.5" x2="20" y2="24" stroke="#1e1e1e" stroke-width="2"/>
+            <line x1="20" y1="14"   x2="9"  y2="14" stroke="#1e1e1e" stroke-width="2"/>
+            <line x1="20" y1="14"   x2="31" y2="14" stroke="#1e1e1e" stroke-width="2"/>
+            <line x1="9"  y1="14"   x2="6"  y2="22" stroke="#1e1e1e" stroke-width="1.5"/>
+            <line x1="31" y1="14"   x2="34" y2="22" stroke="#1e1e1e" stroke-width="1.5"/>
+            <line x1="20" y1="24"   x2="13" y2="35" stroke="#1e1e1e" stroke-width="2"/>
+            <line x1="20" y1="24"   x2="27" y2="35" stroke="#1e1e1e" stroke-width="2"/>
+          </svg>
+        </div>
+        <div class="artist-info">
+          <div class="artist-name">BLACKEDY</div>
+          <div class="artist-genre">RAP · UNDERGROUND</div>
+        </div>
+      </div>
+
+      <div class="artist-card">
+        <div class="artist-bg" style="background:#0b0b0b;">
+          <svg width="70" height="70" viewBox="0 0 40 40" fill="none">
+            <circle cx="22" cy="6" r="3.5" stroke="#1e1e1e" stroke-width="2"/>
+            <line x1="22" y1="9.5" x2="17" y2="21" stroke="#1e1e1e" stroke-width="2"/>
+            <line x1="20" y1="15"  x2="10" y2="19" stroke="#1e1e1e" stroke-width="2"/>
+            <line x1="20" y1="15"  x2="30" y2="11" stroke="#1e1e1e" stroke-width="2"/>
+            <line x1="17" y1="21"  x2="9"  y2="31" stroke="#1e1e1e" stroke-width="2"/>
+            <line x1="17" y1="21"  x2="28" y2="29" stroke="#1e1e1e" stroke-width="2"/>
+          </svg>
+        </div>
+        <div class="artist-info">
+          <div class="artist-name">ROCKOUT DANNY</div>
+          <div class="artist-genre">RAGE · TRAP</div>
+        </div>
+      </div>
+
+      <div class="artist-card">
+        <div class="artist-bg" style="background:#090909;">
+          <span style="font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:5px;color:#181818;">COMING SOON</span>
+        </div>
+        <div class="artist-info">
+          <div class="artist-name">???</div>
+          <div class="artist-genre">UNKNOWN · TBA</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ─── PAGE: SHOWS ─── -->
+<div class="page" id="page-shows">
+  <div class="page-inner">
+    <div class="sec-head">
+      <span class="sec-num">02 //</span>
+      <h2 class="sec-title">Shows</h2>
+    </div>
+
+    <div class="show-row upcoming">
+      <div class="show-date">MAR<br>13<br>2026</div>
+      <div>
+        <div class="show-title">LACKVILL IN LOS ANGELES</div>
+        <div class="show-venue">BRICKS ROCK BAR — 3661 PORTLAND AVE, LA</div>
+      </div>
+      <div class="show-right">
+        <div style="font-size:10px;letter-spacing:3px;color:var(--dim);">7PM–12AM · ALL AGES</div>
+        <div class="show-tag">TICKETS VIA MYPLOTS</div>
+      </div>
+    </div>
+
+    <div class="show-row upcoming">
+      <div class="show-date">APR<br>04<br>2026</div>
+      <div>
+        <div class="show-title">FIRST FRIDAY — PHOENIX AZ</div>
+        <div class="show-venue">UNDISCLOSED VENUE — PHOENIX, AZ</div>
+      </div>
+      <div class="show-right">
+        <div style="font-size:10px;letter-spacing:3px;color:var(--dim);">ALL AGES · ~40 CAP</div>
+        <div class="show-tag">DETAILS TBA</div>
+      </div>
+    </div>
+
+    <div class="show-row" style="opacity:0.32;pointer-events:none;">
+      <div class="show-date">TBA<br>—</div>
+      <div>
+        <div class="show-title">PARTIALLY PRESCRIBED VOL. 3</div>
+        <div class="show-venue">LOCATION TBD</div>
+      </div>
+      <div class="show-right">
+        <div style="font-size:10px;letter-spacing:3px;color:var(--dim);">SUMMER 2026</div>
+        <div class="show-tag">ANNOUNCED SOON</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ─── PAGE: ABOUT ─── -->
+<div class="page" id="page-about">
+  <div class="page-inner">
+    <div class="sec-head">
+      <span class="sec-num">03 //</span>
+      <h2 class="sec-title">About</h2>
+    </div>
+    <div class="about-layout">
+      <div class="about-text">
+        <p><strong>Partially Prescribed</strong> is an underground music collective and event project rooted in plugg, cloud rap, and ambient trap. Started from scratch because the shows we wanted to attend didn't exist yet.</p>
+        <p>We run small, intentional events in LA and Arizona. 40–50 people in a room that was never designed for anyone but you. No corporate backing. No algorithm deciding what makes the cut.</p>
+        <p>The beats come first. The flyers, the rooms, the scene — that's all secondary. But it matters too.</p>
+        <a href="https://soundcloud.com/partiallyprescribed" target="_blank" class="sc-link">SOUNDCLOUD ↗</a>
+      </div>
+      <div class="about-box">
+        <div class="about-stat">
+          <div class="stat-big">50</div>
+          <div class="stat-label">MAX CAPACITY</div>
+        </div>
+        <div class="about-stat">
+          <div class="stat-big" style="color:var(--white);">LA · AZ</div>
+          <div class="stat-label">ACTIVE MARKETS</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── PAGE: CONTACT ─── -->
+<div class="page" id="page-contact">
+  <div class="page-inner">
+    <div class="sec-head">
+      <span class="sec-num">04 //</span>
+      <h2 class="sec-title">Contact</h2>
+    </div>
+    <div class="contact-layout">
+      <div class="contact-block">
+        <h3>BOOKINGS</h3>
+        <p>For artist bookings, venue inquiries,<br>press, or collabs — reach out.</p>
+        <br><br>
+        <h3>FIND US</h3>
+        <p>
+          INSTAGRAM &nbsp;<a href="#">@PARTIALLYPRESCRIBED</a><br>
+          SOUNDCLOUD &nbsp;<a href="https://soundcloud.com/partiallyprescribed" target="_blank">PARTIALLYPRESCRIBED</a>
+        </p>
+      </div>
+      <form class="cf" onsubmit="return false;">
+        <div class="cf-field">
+          <label>Name</label>
+          <input type="text" placeholder="—" autocomplete="off">
+        </div>
+        <div class="cf-field">
+          <label>Email</label>
+          <input type="email" placeholder="—" autocomplete="off">
+        </div>
+        <div class="cf-field">
+          <label>Message</label>
+          <textarea rows="4" placeholder="—"></textarea>
+        </div>
+        <button class="send-btn" type="submit">SEND ↗</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ─── BACK BTN ─── -->
+<button class="back-btn" id="back-btn">← BACK</button>
+
+<script>
+  const pages = {
+    hero:    document.getElementById('page-hero'),
+    artists: document.getElementById('page-artists'),
+    shows:   document.getElementById('page-shows'),
+    about:   document.getElementById('page-about'),
+    contact: document.getElementById('page-contact'),
+  };
+
+  const navItems = document.querySelectorAll('.nav-item[data-target]');
+  const backBtn  = document.getElementById('back-btn');
+  let current = 'hero';
+
+  function navigate(target) {
+    if (target === current) return;
+
+    pages[current].classList.remove('active');
+    navItems.forEach(n => n.classList.remove('active'));
+
+    pages[target].classList.add('active');
+    current = target;
+
+    if (target === 'hero') {
+      backBtn.classList.remove('visible');
+    } else {
+      backBtn.classList.add('visible');
+      const match = [...navItems].find(n => n.dataset.target === target);
+      if (match) match.classList.add('active');
+    }
+  }
+
+  navItems.forEach(btn => {
+    btn.addEventListener('click', () => navigate(btn.dataset.target));
+  });
+
+  backBtn.addEventListener('click', () => navigate('hero'));
+</script>
+
+</body>
+</html>

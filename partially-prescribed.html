@@ -1,820 +1,1216 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Partially Prescribed</title>
-  <link href="https://fonts.googleapis.com/css2?family=Rubik+Wet+Paint&family=Share+Tech+Mono&family=Bebas+Neue&display=swap" rel="stylesheet">
-  <style>
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Partially Prescribed</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rubik+Dirt&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --g:#b4ff39;
+  --gd:rgba(180,255,57,0.08);
+  --rd:#ff2d2d;
+  --w:#ffffff;
+  --w3:rgba(255,255,255,0.3);
+  --w5:rgba(255,255,255,0.5);
+  --w1:rgba(255,255,255,0.1);
+  --w06:rgba(255,255,255,0.06);
+}
+html{scroll-behavior:smooth}
+body{
+  user-select: none;
+  background:#000;
+  color:#fff;
+  font-family:'Space Mono',monospace;
+  overflow-x:hidden;
+  cursor:crosshair;
+}
 
-    :root {
-      --black: #040404;
-      --green: #45ff35;
-      --green-glow: rgba(69, 255, 53, 0.35);
-      --white: #ededed;
-      --dim: #555;
-      --border: #141414;
+/* Grain canvas fixed overlay */
+#grain{
+  position:fixed;
+  top:0;left:0;
+  width:100%;height:100%;
+  pointer-events:none;
+  z-index:9000;
+  opacity:0.045;
+  mix-blend-mode:overlay;
+}
+
+/* NAV */
+nav{
+  position:fixed;top:0;left:0;right:0;
+  z-index:500;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:1.5rem 2.5rem;
+}
+.nav-logo{
+  font-family:'Rubik Dirt',sans-serif;
+  font-size:1rem;
+  color:var(--g);
+  text-decoration:none;
+  letter-spacing:0.04em;
+
+}
+.nav-img{
+  width:100px;
+}
+@media(max-width:768px){
+
+    .nav-img{
+        width:50px;
     }
-
-    html, body {
-      height: 100%;
-      overflow: hidden;
-    }
-
-    body {
-      background: var(--black);
-      color: var(--white);
-      font-family: 'Share Tech Mono', monospace;
-      overflow-x: hidden;
-      cursor: crosshair;
-    }
-
-    /* Grain */
-    body::after {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
-      pointer-events: none;
-      z-index: 9000;
-      opacity: 0.5;
-    }
-
-    /* Scanlines */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background: repeating-linear-gradient(
-        0deg, transparent, transparent 3px,
-        rgba(0,0,0,0.06) 3px, rgba(0,0,0,0.06) 4px
-      );
-      pointer-events: none;
-      z-index: 8999;
-    }
-
-    /* ─── NAV ─── */
-    nav {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      z-index: 500;
-      padding: 22px 0 14px;
-      display: flex;
-      justify-content: center;
-      gap: 56px;
-      background: linear-gradient(to bottom, rgba(4,4,4,0.92) 0%, transparent 100%);
-    }
-
-    .nav-item {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 5px;
-      cursor: pointer;
-      text-decoration: none;
-      background: none;
-      border: none;
-      padding: 0;
-    }
-
-    .nav-icon {
-      width: 38px;
-      height: 38px;
-      filter: drop-shadow(0 0 5px var(--green-glow));
-      transform-origin: center;
-    }
-
-    .nav-icon.s1 { animation: spin     3.2s linear infinite; }
-    .nav-icon.s2 { animation: spin-rev 4.1s linear infinite; }
-    .nav-icon.s3 { animation: spin     2.7s linear infinite; }
-    .nav-icon.s4 { animation: spin-rev 5.0s linear infinite; }
-
-    .nav-item:hover .nav-icon,
-    .nav-item.active .nav-icon {
-      animation-duration: 0.5s;
-      filter: drop-shadow(0 0 14px var(--green));
-    }
-
-    @keyframes spin     { to { transform: rotate( 360deg); } }
-    @keyframes spin-rev { to { transform: rotate(-360deg); } }
-
-    .nav-label {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 10px;
-      letter-spacing: 4px;
-      color: var(--green);
-      opacity: 0;
-      transform: translateY(-5px);
-      transition: opacity 0.18s ease, transform 0.18s ease;
-      white-space: nowrap;
-      pointer-events: none;
-    }
-
-    .nav-item:hover .nav-label,
-    .nav-item.active .nav-label {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    /* ─── PAGES ─── */
-    .page {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.35s ease;
-      overflow-y: auto;
-    }
-
-    .page.active {
-      opacity: 1;
-      pointer-events: all;
-    }
-
-    /* ─── HERO ─── */
-    #page-hero { overflow: hidden; }
-
-    #page-hero::before {
-      content: '';
-      position: absolute;
-      bottom: -80px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 700px;
-      height: 300px;
-      background: radial-gradient(ellipse at center, rgba(69,255,53,0.06) 0%, transparent 70%);
-      pointer-events: none;
-    }
-
-    .logo-wrap { text-align: center; }
-
-    .logo-line {
-      display: block;
-      font-family: 'Rubik Wet Paint', cursive;
-      line-height: 0.88;
-      letter-spacing: -1px;
-    }
-
-    .logo-line.l1 {
-      font-size: clamp(64px, 11vw, 120px);
-      color: transparent;
-      -webkit-text-stroke: 2px var(--white);
-      animation: flicker 9s ease-in-out infinite;
-    }
-
-    .logo-line.l2 {
-      font-size: clamp(54px, 9.5vw, 104px);
-      color: transparent;
-      -webkit-text-stroke: 2px var(--green);
-      text-shadow: 0 0 40px rgba(69,255,53,0.15);
-      animation: flicker 9s ease-in-out infinite 0.6s;
-    }
-
-    @keyframes flicker {
-      0%, 93%, 100% { opacity: 1; }
-      94%  { opacity: 0.78; }
-      95%  { opacity: 1; }
-      97%  { opacity: 0.6; }
-      98%  { opacity: 0.95; }
-    }
-
-    .hero-sub {
-      margin-top: 36px;
-      font-size: 10px;
-      letter-spacing: 9px;
-      color: var(--dim);
-    }
-
-    /* ─── INNER PAGES ─── */
-    .page-inner {
-      width: 100%;
-      max-width: 1100px;
-      padding: 110px 64px 64px;
-    }
-
-    .sec-head {
-      display: flex;
-      align-items: baseline;
-      gap: 18px;
-      margin-bottom: 56px;
-      padding-bottom: 18px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .sec-num {
-      font-size: 11px;
-      letter-spacing: 3px;
-      color: var(--green);
-    }
-
-    .sec-title {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(44px, 7vw, 88px);
-      letter-spacing: 5px;
-      line-height: 1;
-    }
-
-    /* ─── ARTISTS ─── */
-    .artists-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 2px;
-    }
-
-    .artist-card {
-      position: relative;
-      aspect-ratio: 3/4;
-      overflow: hidden;
-      cursor: crosshair;
-    }
-
-    .artist-card::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(to top, rgba(4,4,4,0.92) 0%, transparent 55%);
-      z-index: 1;
-    }
-
-    .artist-bg {
-      width: 100%;
-      height: 100%;
-      background: #0c0c0c;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: filter 0.3s;
-      position: relative;
-    }
-
-    .artist-bg::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.012) 2px, rgba(255,255,255,0.012) 4px);
-    }
-
-    .artist-card:hover .artist-bg { filter: brightness(1.4) contrast(1.15); }
-
-    .artist-info {
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      padding: 22px;
-      z-index: 2;
-    }
-
-    .artist-name {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 30px;
-      letter-spacing: 2px;
-    }
-
-    .artist-genre {
-      font-size: 9px;
-      letter-spacing: 4px;
-      color: var(--green);
-      margin-top: 4px;
-    }
-
-    /* ─── SHOWS ─── */
-    .show-row {
-      display: grid;
-      grid-template-columns: 70px 1fr auto;
-      align-items: center;
-      gap: 40px;
-      padding: 26px 0;
-      border-bottom: 1px solid var(--border);
-      cursor: pointer;
-      position: relative;
-    }
-
-    .show-row::before {
-      content: '';
-      position: absolute;
-      left: -64px; right: -64px;
-      top: 0; bottom: 0;
-      background: transparent;
-      transition: background 0.2s;
-      z-index: -1;
-    }
-
-    .show-row:hover::before { background: rgba(69,255,53,0.025); }
-    .show-row:hover .show-title { color: var(--green); }
-
-    .show-date {
-      font-size: 10px;
-      letter-spacing: 2px;
-      color: var(--green);
-      line-height: 1.8;
-      text-transform: uppercase;
-    }
-
-    .show-title {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 34px;
-      letter-spacing: 3px;
-      transition: color 0.2s;
-    }
-
-    .show-venue {
-      font-size: 10px;
-      letter-spacing: 3px;
-      color: var(--dim);
-      margin-top: 5px;
-    }
-
-    .show-right { text-align: right; }
-
-    .show-tag {
-      display: inline-block;
-      border: 1px solid #222;
-      padding: 5px 12px;
-      font-size: 9px;
-      letter-spacing: 3px;
-      color: var(--dim);
-      margin-top: 8px;
-    }
-
-    .show-row.upcoming .show-tag {
-      border-color: var(--green);
-      color: var(--green);
-    }
-
-    /* ─── ABOUT ─── */
-    .about-layout {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 80px;
-      align-items: center;
-    }
-
-    .about-text p {
-      font-size: 13px;
-      line-height: 2;
-      color: #888;
-      margin-bottom: 18px;
-    }
-
-    .about-text strong { color: var(--white); }
-
-    .sc-link {
-      display: inline-block;
-      margin-top: 24px;
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 15px;
-      letter-spacing: 5px;
-      color: var(--green);
-      text-decoration: none;
-      border-bottom: 1px solid var(--green);
-      padding-bottom: 2px;
-      transition: opacity 0.2s;
-    }
-    .sc-link:hover { opacity: 0.55; }
-
-    .about-box {
-      aspect-ratio: 1;
-      background: #080808;
-      border: 1px solid var(--border);
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .about-box::before {
-      content: 'PP';
-      font-family: 'Rubik Wet Paint', cursive;
-      font-size: 200px;
-      color: transparent;
-      -webkit-text-stroke: 1px #141414;
-      position: absolute;
-      user-select: none;
-    }
-
-    .about-stat {
-      position: absolute;
-      font-family: 'Bebas Neue', sans-serif;
-    }
-    .about-stat:first-of-type { top: 28px; left: 28px; }
-    .about-stat:last-of-type  { bottom: 28px; right: 28px; text-align: right; }
-
-    .stat-big {
-      font-size: 58px;
-      color: var(--green);
-      line-height: 1;
-    }
-
-    .stat-label {
-      font-size: 9px;
-      letter-spacing: 4px;
-      color: var(--dim);
-      margin-top: 4px;
-    }
-
-    /* ─── CONTACT ─── */
-    .contact-layout {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 80px;
-    }
-
-    .contact-block h3 {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 22px;
-      letter-spacing: 5px;
-      margin-bottom: 14px;
-    }
-
-    .contact-block p {
-      font-size: 11px;
-      color: var(--dim);
-      letter-spacing: 2px;
-      line-height: 2.2;
-    }
-
-    .contact-block a {
-      color: var(--green);
-      text-decoration: none;
-    }
-
-    .cf { display: flex; flex-direction: column; gap: 18px; }
-
-    .cf-field { display: flex; flex-direction: column; gap: 6px; }
-
-    .cf-field label {
-      font-size: 8px;
-      letter-spacing: 5px;
-      color: var(--dim);
-      text-transform: uppercase;
-    }
-
-    .cf-field input,
-    .cf-field textarea {
-      background: transparent;
-      border: none;
-      border-bottom: 1px solid #1e1e1e;
-      color: var(--white);
-      font-family: 'Share Tech Mono', monospace;
-      font-size: 13px;
-      padding: 10px 0;
-      outline: none;
-      resize: none;
-      transition: border-color 0.2s;
-    }
-
-    .cf-field input:focus,
-    .cf-field textarea:focus { border-bottom-color: var(--green); }
-
-    .cf-field input::placeholder,
-    .cf-field textarea::placeholder { color: #222; }
-
-    .send-btn {
-      align-self: flex-start;
-      margin-top: 8px;
-      background: transparent;
-      border: 1px solid var(--green);
-      color: var(--green);
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 15px;
-      letter-spacing: 7px;
-      padding: 12px 30px;
-      cursor: pointer;
-      transition: all 0.18s;
-    }
-
-    .send-btn:hover {
-      background: var(--green);
-      color: var(--black);
-    }
-
-    /* ─── BACK BTN ─── */
-    .back-btn {
-      position: fixed;
-      bottom: 36px;
-      left: 64px;
-      background: none;
-      border: none;
-      color: var(--dim);
-      font-family: 'Share Tech Mono', monospace;
-      font-size: 10px;
-      letter-spacing: 4px;
-      cursor: pointer;
-      transition: color 0.2s;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.35s ease, color 0.2s;
-      z-index: 400;
-    }
-
-    .back-btn.visible {
-      opacity: 1;
-      pointer-events: all;
-    }
-
-    .back-btn:hover { color: var(--white); }
-
-    /* ─── RESPONSIVE ─── */
-    @media (max-width: 768px) {
-      .page-inner { padding: 100px 28px 80px; }
-      .about-layout, .contact-layout { grid-template-columns: 1fr; gap: 48px; }
-      .show-row { grid-template-columns: 55px 1fr; }
-      .show-right { display: none; }
-      nav { gap: 32px; }
-      .back-btn { left: 28px; }
-    }
-  </style>
+}
+
+.nav-links a{
+  font-size:0.6rem;
+  letter-spacing:0.2em;
+  text-transform:uppercase;
+  color:var(--w3);
+  text-decoration:none;
+  transition:color 0.2s;
+}
+.nav-links a:hover{color:var(--g)}
+
+/* MARQUEE */
+.marquee-wrap{
+  overflow:hidden;
+  white-space:nowrap;
+  border-top:1px solid var(--w06);
+  border-bottom:1px solid var(--w06);
+  padding:0.6rem 0;
+  margin-top:100vh;
+}
+.marquee-track{
+  display:inline-flex;
+  gap:3rem;
+  animation:marquee 22s linear infinite;
+}
+.marquee-track span{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:0.85rem;
+  letter-spacing:0.25em;
+  color:rgba(255,255,255,0.15);
+}
+.marquee-track span.accent{color:var(--g)}
+@keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+/* HERO */
+.hero{
+  min-height:100vh;
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  gap:3rem;
+  padding:7rem 2.5rem 4rem;
+  position:fixed;
+  top:0;left:0;right:0;bottom:0;
+  pointer-events:none;
+  z-index:1;
+  overflow:hidden;
+}
+.hero-inner{pointer-events:all;flex:1;min-width:0;height:50%}
+.hero-eyebrow{
+  font-size:0.6rem;
+  letter-spacing:0.35em;
+  text-transform:uppercase;
+  color:var(--g);
+  margin-bottom:1.5rem;
+}
+.hero-title{
+  font-family:'Rubik Dirt',sans-serif;
+  font-size:clamp(3.5rem,12vw,11rem);
+  line-height:0.88;
+  position:relative;
+}
+.ht1{
+  display:block;
+  color:#fff;
+  animation:flicker 9s 3s infinite;
+  position:relative;
+  z-index:2;
+}
+.ht1-ghost{
+  display:block;
+  position:absolute;
+  top:0;left:0;
+  color:var(--rd);
+  clip-path:polygon(0 35%,100% 35%,100% 55%,0 55%);
+  animation:glitch-r 9s 3s infinite;
+  pointer-events:none;
+}
+.ht1-ghost2{
+  display:block;
+  position:absolute;
+  top:0;left:0;
+  color:var(--g);
+  clip-path:polygon(0 70%,100% 70%,100% 85%,0 85%);
+  animation:glitch-g 9s 3.08s infinite;
+  pointer-events:none;
+}
+.ht2{
+  display:block;
+  -webkit-text-stroke:2px rgba(255,255,255,0.7);
+  color:transparent;
+  position:relative;
+  z-index:2;
+}
+.hero-sub{
+  margin-top:2rem;
+  display:flex;
+  gap:1.5rem;
+  align-items:center;
+  flex-wrap:wrap;
+}
+.sub-item{
+  font-size:0.6rem;
+  letter-spacing:0.2em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,0.35);
+}
+.sub-dot{
+  width:3px;height:3px;
+  border-radius:50%;
+  background:var(--g);
+  opacity:0.5;
+}
+.hero-cta{
+  margin-top:2.5rem;
+  display:flex;
+  gap:1rem;
+  align-items:center;
+}
+.btn-solid{
+  display:inline-block;
+  padding:0.85rem 2.2rem;
+  background:var(--g);
+  color:#000;
+  font-family:'Space Mono',monospace;
+  font-size:0.65rem;
+  font-weight:700;
+  letter-spacing:0.15em;
+  text-transform:uppercase;
+  text-decoration:none;
+  transition:transform 0.12s,box-shadow 0.12s;
+}
+.btn-solid:hover{
+  transform:translate(-2px,-2px);
+  box-shadow:3px 3px 0 var(--g);
+  background:#fff;
+}
+.btn-ghost{
+  display:inline-block;
+  padding:0.85rem 2.2rem;
+  border:1px solid rgba(255,255,255,0.2);
+  color:rgba(255,255,255,0.55);
+  font-family:'Space Mono',monospace;
+  font-size:0.65rem;
+  letter-spacing:0.15em;
+  text-transform:uppercase;
+  text-decoration:none;
+  transition:border-color 0.15s,color 0.15s;
+}
+.btn-ghost:hover{border-color:var(--g);color:var(--g)}
+.hero-corner{
+  position:absolute;
+  bottom:4rem;right:2.5rem;
+  font-size:0.55rem;
+  letter-spacing:0.25em;
+  color:rgba(255,255,255,0.1);
+  text-transform:uppercase;
+  writing-mode:vertical-rl;
+}
+
+/* CONTENT STARTS AFTER HERO */
+.page-content{
+  position:relative;
+  z-index:10;
+  background:#000;
+  margin-top:100vh;
+}
+
+/* SECTION HELPERS */
+.sec{padding:6rem 2.5rem}
+.sec-label{
+  font-size:0.55rem;
+  letter-spacing:0.4em;
+  text-transform:uppercase;
+  color:var(--g);
+  margin-bottom:2rem;
+  display:flex;
+  align-items:center;
+  gap:1rem;
+}
+.sec-label::after{
+  content:'';
+  width:50px;height:1px;
+  background:var(--g);
+  opacity:0.4;
+}
+hr.div{
+  border:none;
+  border-top:1px solid var(--w06);
+}
+
+/* SHOWS */
+.shows-head{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(3rem,9vw,7.5rem);
+  line-height:0.92;
+  letter-spacing:0.03em;
+  margin-bottom:4rem;
+}
+.shows-head em{
+  font-style:normal;
+  -webkit-text-stroke:2px rgba(255,255,255,0.5);
+  color:transparent;
+}
+.show-row{
+  display:grid;
+  grid-template-columns:90px 1fr auto auto;
+  align-items:center;
+  gap:2rem;
+  padding:1.6rem 0;
+  border-top:1px solid var(--w1);
+  text-decoration:none;
+  color:inherit;
+  transition:padding-left 0.2s;
+}
+.show-row:last-child{border-bottom:1px solid var(--w1)}
+.show-row:hover{padding-left:0.75rem}
+.show-row:hover .st{color:var(--g)}
+.show-row:hover .sa{opacity:1;color:var(--g)}
+.sd{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:1rem;
+  letter-spacing:0.1em;
+  color:var(--g);
+}
+.si{display:flex;flex-direction:column;gap:5px}
+.st{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:1.55rem;
+  letter-spacing:0.05em;
+  transition:color 0.15s;
+}
+.sv{
+  font-size:0.58rem;
+  letter-spacing:0.15em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,0.35);
+}
+.stags{display:flex;gap:6px;flex-wrap:wrap}
+.stag{
+  font-size:0.5rem;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  padding:3px 7px;
+  border:1px solid rgba(255,255,255,0.15);
+  color:rgba(255,255,255,0.4);
+}
+.stag.live{border-color:var(--g);color:var(--g)}
+.sa{
+  font-size:1rem;
+  opacity:0.15;
+  transition:opacity 0.15s,color 0.15s;
+  white-space:nowrap;
+}
+
+/* SOUNDS */
+.sounds-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:5rem;
+  align-items:center;
+}
+.sounds-title{
+  font-family:'Rubik Dirt',sans-serif;
+  font-size:clamp(2.5rem,5vw,5rem);
+  line-height:0.92;
+  margin-bottom:1.5rem;
+}
+.sounds-title em{font-style:normal;color:var(--g)}
+.sounds-body{
+  font-size:0.7rem;
+  line-height:1.95;
+  color:rgba(255,255,255,0.42);
+  max-width:400px;
+  margin-bottom:2rem;
+}
+.sounds-body em{font-style:normal;color:var(--g)}
+.sc-wrap{width:100%}
+.sc-frame{width:100%;height:166px;border:none}
+
+/* ABOUT */
+.about-grid{
+  display:grid;
+  grid-template-columns:200px 1fr;
+  gap:6rem;
+  align-items:start;
+}
+.stats{display:flex;flex-direction:column;gap:2.5rem}
+.stat{border-left:1.5px solid var(--g);padding-left:1.25rem}
+.stat-n{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:3rem;
+  line-height:1;
+  color:var(--g);
+}
+.stat-l{
+  font-size:0.55rem;
+  letter-spacing:0.18em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,0.35);
+  margin-top:3px;
+}
+.about-head{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(1.8rem,3.5vw,3rem);
+  line-height:1.05;
+  margin-bottom:1.5rem;
+}
+.about-body{
+  font-size:0.7rem;
+  line-height:2;
+  color:rgba(255,255,255,0.42);
+  max-width:580px;
+}
+.about-body em{font-style:normal;color:rgba(180,255,57,0.85)}
+.about-body p+p{margin-top:1rem}
+
+/* BOOKING */
+.booking-wrap{
+  text-align:center;
+  padding:6rem 2.5rem 5rem;
+  position:relative;
+  overflow:hidden;
+}
+.booking-glow{
+  position:absolute;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  width:700px;height:700px;
+  background:radial-gradient(circle,rgba(180,255,57,0.055) 0%,transparent 68%);
+  pointer-events:none;
+}
+.booking-title{
+  font-family:'Rubik Dirt',sans-serif;
+  font-size:clamp(2.5rem,9vw,8rem);
+  line-height:0.88;
+  margin-bottom:2rem;
+}
+.booking-sub{
+  font-size:0.58rem;
+  letter-spacing:0.3em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,0.25);
+  margin-bottom:2rem;
+}
+.booking-email{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(0.9rem,2.5vw,1.6rem);
+  letter-spacing:0.08em;
+  color:rgba(255,255,255,0.25);
+  text-decoration:none;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+  padding-bottom:3px;
+  transition:color 0.2s,border-color 0.2s;
+}
+.booking-email:hover{color:var(--g);border-color:var(--g)}
+.socials{
+  display:flex;
+  justify-content:center;
+  gap:2.5rem;
+  margin-top:3rem;
+}
+.soc{
+  font-size:0.58rem;
+  letter-spacing:0.2em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,0.25);
+  text-decoration:none;
+  transition:color 0.2s;
+}
+.soc:hover{color:var(--g)}
+
+/* FOOTER */
+footer{
+  border-top:1px solid var(--w06);
+  padding:1.75rem 2.5rem;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.fl{
+  font-family:'Rubik Dirt',sans-serif;
+  font-size:0.85rem;
+  color:rgba(255,255,255,0.15);
+}
+.fr{
+  font-size:0.55rem;
+  letter-spacing:0.15em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,0.1);
+}
+
+/* SLIDESHOW */
+.hero-slideshow{
+  pointer-events:all;
+  width:min(36vw,400px);
+  flex-shrink:0;
+  align-self:stretch;
+  position:relative;
+}
+.ss-frame{
+  position:absolute;
+  top:5rem;
+  bottom:2rem;
+  left:0;right:0;
+  overflow:hidden;
+}
+/* corner accent brackets */
+.ss-frame::before,.ss-frame::after{
+  content:'';
+  position:absolute;
+  width:18px;height:18px;
+  z-index:10;
+  opacity:0.55;
+}
+.ss-frame::before{
+  top:0;left:0;
+  border-top:1px solid var(--g);
+  border-left:1px solid var(--g);
+}
+.ss-frame::after{
+  bottom:0;right:0;
+  border-bottom:1px solid var(--g);
+  border-right:1px solid var(--g);
+}
+.ss-slide{
+  position:absolute;
+  inset:0;
+  opacity:0;
+  transition:opacity 1s ease;
+  background-size:cover;
+  background-position:center top;
+  overflow:hidden;
+}
+.ss-slide.active{opacity:1}
+/* Ken Burns on active slide */
+.ss-slide.active .ss-ph{
+  animation:kb 6s ease-out forwards;
+}
+.ss-ph{
+  position:absolute;
+  inset:-5%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background-size:cover;
+  background-position:center;
+}
+@keyframes kb{
+  0%{transform:scale(1.06) translateY(0)}
+  100%{transform:scale(1) translateY(-1%)}
+}
+/* placeholder person silhouette overlay */
+.ss-ph::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:inherit;
+  background-size:cover;
+  background-position:center;
+}
+/* label at bottom */
+.ss-label{
+  position:absolute;
+  bottom:0.9rem;
+  left:1rem;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:0.72rem;
+  letter-spacing:0.25em;
+  color:rgba(255,255,255,0.45);
+  z-index:5;
+  transition:opacity 0.5s;
+}
+/* index counter top-right */
+.ss-counter{
+  position:absolute;
+  top:0.85rem;
+  right:0.85rem;
+  font-size:0.55rem;
+  letter-spacing:0.2em;
+  color:rgba(255,255,255,0.25);
+  z-index:5;
+  font-family:'Space Mono',monospace;
+}
+/* dot nav */
+.ss-dots{
+  position:absolute;
+  bottom:0.85rem;
+  right:1rem;
+  display:flex;
+  gap:6px;
+  z-index:5;
+}
+.ss-dot{
+  width:5px;height:5px;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,0.35);
+  background:transparent;
+  cursor:pointer;
+  padding:0;
+  transition:background 0.2s,border-color 0.2s,transform 0.2s;
+}
+.ss-dot.active{
+  background:var(--g);
+  border-color:var(--g);
+  transform:scale(1.3);
+}
+/* bottom gradient fade into black */
+.ss-fade{
+  position:absolute;
+  bottom:0;left:0;right:0;
+  height:35%;
+  background:linear-gradient(to bottom,transparent,rgba(0,0,0,0.85));
+  z-index:3;
+  pointer-events:none;
+}
+
+/* MEDIUM — behind and right, faded */
+@media(max-width:1150px){
+  .hero-slideshow{
+    position:absolute;
+    right:0;top:0;bottom:0;
+    width:52%;
+    align-self:auto;
+    -webkit-mask-image:linear-gradient(to right,transparent 0%,rgba(0,0,0,0.5) 30%,black 65%);
+    mask-image:linear-gradient(to right,transparent 0%,rgba(0,0,0,0.5) 30%,black 65%);
+    opacity:0.3;
+    pointer-events:none;
+  }
+  .ss-frame{top:0;bottom:0}
+  .ss-label,.ss-dots,.ss-counter{display:none}
+}
+
+/* INSTAGRAM */
+.ig-sec{padding:6rem 2.5rem}
+.ig-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  margin-bottom:3rem;
+  flex-wrap:wrap;
+  gap:1.5rem;
+}
+.ig-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(2.5rem,7vw,6rem);
+  line-height:0.92;
+  letter-spacing:0.03em;
+}
+.ig-title em{
+  font-style:normal;
+  -webkit-text-stroke:2px rgba(255,255,255,0.4);
+  color:transparent;
+}
+.ig-handle-wrap{text-align:right}
+.ig-handle{
+  display:block;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:1.1rem;
+  letter-spacing:0.12em;
+  color:rgba(255,255,255,0.25);
+  text-decoration:none;
+  transition:color 0.2s;
+  margin-bottom:0.75rem;
+}
+.ig-handle:hover{color:var(--g)}
+
+/* grid */
+.ig-grid{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:4px;
+}
+.ig-tile{
+  aspect-ratio:1/1;
+  position:relative;
+  overflow:hidden;
+  cursor:pointer;
+  background:#0a0a0a;
+  text-decoration:none;
+}
+.ig-tile-bg{
+  position:absolute;
+  inset:0;
+  transition:transform 0.45s ease;
+}
+.ig-tile:hover .ig-tile-bg{transform:scale(1.06)}
+.ig-tile-overlay{
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,0);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  gap:6px;
+  transition:background 0.3s;
+}
+.ig-tile:hover .ig-tile-overlay{background:rgba(0,0,0,0.55)}
+.ig-tile-meta{
+  opacity:0;
+  text-align:center;
+  transition:opacity 0.3s;
+  pointer-events:none;
+}
+.ig-tile:hover .ig-tile-meta{opacity:1}
+.ig-tile-meta span{
+  display:block;
+  font-size:0.55rem;
+  letter-spacing:0.18em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,0.7);
+}
+.ig-tile-meta strong{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:1rem;
+  color:#fff;
+  letter-spacing:0.1em;
+}
+/* video indicator */
+.ig-tile.vid::after{
+  content:'▶';
+  position:absolute;
+  top:0.6rem;right:0.7rem;
+  font-size:0.6rem;
+  color:rgba(255,255,255,0.5);
+  pointer-events:none;
+}
+/* live/event badge */
+.ig-badge{
+  position:absolute;
+  top:0.6rem;left:0.7rem;
+  font-size:0.45rem;
+  letter-spacing:0.18em;
+  text-transform:uppercase;
+  padding:2px 6px;
+  border:1px solid var(--g);
+  color:var(--g);
+  pointer-events:none;
+  background:rgba(0,0,0,0.6);
+}
+/* bottom strip */
+.ig-footer{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:2rem;
+  flex-wrap:wrap;
+  gap:1rem;
+}
+.ig-follow-note{
+  font-size:0.58rem;
+  letter-spacing:0.15em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,0.2);
+}
+@media(max-width:900px){
+  .ig-grid{grid-template-columns:repeat(3,1fr)}
+  .ig-tile:nth-child(n+7){display:none}
+}
+@media(max-width:600px){
+  .ig-grid{grid-template-columns:repeat(3,1fr);gap:3px}
+  .ig-sec{padding:4rem 1.5rem}
+  .ig-tile:nth-child(n+7){display:none}
+}
+
+/* ANIMATIONS */
+@keyframes flicker{
+  0%,88%,90%,92%,100%{opacity:1}
+  89%,91%{opacity:0.93}
+}
+@keyframes glitch-r{
+  0%,84%,89%,100%{transform:translate(0);opacity:0}
+  85%{transform:translate(-5px,1px);opacity:0.7}
+  86%{transform:translate(4px,-2px);opacity:0.5}
+  87%,88%{transform:translate(0);opacity:0}
+}
+@keyframes glitch-g{
+  0%,84%,89%,100%{transform:translate(0);opacity:0}
+  85%{transform:translate(6px,-1px);opacity:0.6}
+  86%{transform:translate(-3px,2px);opacity:0.4}
+  87%,88%{transform:translate(0);opacity:0}
+}
+
+/* SCROLL REVEAL */
+.reveal{
+  opacity:0;
+  transform:translateY(24px);
+  transition:opacity 0.65s ease,transform 0.65s ease;
+}
+.reveal.in{opacity:1;transform:translateY(0)}
+
+@media(max-width:768px){
+  .sounds-grid{grid-template-columns:1fr;gap:3rem}
+  .about-grid{grid-template-columns:1fr;gap:3rem}
+  .show-row{grid-template-columns:70px 1fr;gap:1rem}
+  .stags,.sa{display:none}
+  nav .nav-links{display:none}
+  .hero{
+    flex-direction:column;
+    align-items:flex-start;
+    padding:8.5rem 1.5rem 2rem;
+    gap:1.5rem;
+    overflow-y:auto;
+  }
+  .hero-slideshow{
+    position:relative !important;
+    width:100% !important;
+    height:240px;
+    align-self:auto;
+    -webkit-mask-image:none !important;
+    mask-image:none !important;
+    opacity:1 !important;
+    pointer-events:all !important;
+  }
+
+  .stats{
+    flex-direction: row;
+  }
+  .ss-frame{top:0;bottom:0}
+  .sec{padding:4rem 1.5rem}
+  .booking-wrap{padding:4rem 1.5rem}
+}
+</style>
 </head>
 <body>
 
-<!-- ─── NAV ─── -->
+<canvas id="grain"></canvas>
+
 <nav>
-
-  <button class="nav-item" data-target="artists">
-    <img src="spinning_logo.gif" class="nav-icon">
-
-    <!-- <svg class="nav-icon s1" viewBox="0 0 40 40" fill="none">
-      <circle cx="20" cy="7" r="3.2" stroke="#45ff35" stroke-width="1.4"/>
-      <line x1="20" y1="10.2" x2="20" y2="23" stroke="#45ff35" stroke-width="1.4"/>
-      <line x1="20" y1="15"   x2="11" y2="10" stroke="#45ff35" stroke-width="1.4"/>
-      <line x1="20" y1="15"   x2="29" y2="19" stroke="#45ff35" stroke-width="1.4"/>
-      <line x1="20" y1="23"   x2="13" y2="34" stroke="#45ff35" stroke-width="1.4"/>
-      <line x1="20" y1="23"   x2="27" y2="34" stroke="#45ff35" stroke-width="1.4"/>
-      <circle cx="8"  cy="7"  r="1.2" fill="#45ff35" opacity="0.55"/>
-      <circle cx="33" cy="30" r="1"   fill="#45ff35" opacity="0.4"/>
-    </svg> -->
-    <span class="nav-label">ARTISTS</span>
-  </button>
-
-  <button class="nav-item" data-target="shows">
-        <img src="spinning_logo.gif" class="nav-icon">
-    <!-- <svg class="nav-icon s2" viewBox="0 0 40 40" fill="none">
-      <circle cx="20" cy="7" r="3.2" stroke="#45ff35" stroke-width="1.4"/>
-      <line x1="20" y1="10.2" x2="20" y2="23" stroke="#45ff35" stroke-width="1.4"/>
-      <line x1="20" y1="14"   x2="9"  y2="14" stroke="#45ff35" stroke-width="1.4"/>
-      <line x1="20" y1="14"   x2="31" y2="14" stroke="#45ff35" stroke-width="1.4"/>
-      <line x1="9"  y1="14"   x2="6"  y2="22" stroke="#45ff35" stroke-width="1.2"/>
-      <line x1="31" y1="14"   x2="34" y2="22" stroke="#45ff35" stroke-width="1.2"/>
-      <line x1="20" y1="23"   x2="13" y2="34" stroke="#45ff35" stroke-width="1.4"/>
-      <line x1="20" y1="23"   x2="27" y2="34" stroke="#45ff35" stroke-width="1.4"/>
-    </svg> -->
-    <span class="nav-label">SHOWS</span>
-  </button>
-
-  <button class="nav-item" data-target="about">
-    <img src="spinning_logo.gif" class="nav-icon">
-    <span class="nav-label">ABOUT</span>
-  </button>
-
-  <button class="nav-item" data-target="contact">
-    <img src="spinning_logo.gif" class="nav-icon">
-    <span class="nav-label">CONTACT</span>
-  </button>
-
+    <div>
+    <a href="#" class="nav-logo"><img class="nav-img" src="spinning_logo.gif" alt="Logo"></a>
+    <a href="#" class="nav-logo"><img class="nav-img" src="spinning_logo.gif" alt="Logo"></a>
+    <a href="#" class="nav-logo"><img class="nav-img" src="spinning_logo.gif" alt="Logo"></a>
+    </div>
+  <!-- <a href="#" class="nav-logo">PP</a> -->
+  <ul class="nav-links">
+    <li><a href="#shows">Shows</a></li>
+    <li><a href="#sounds">Sounds</a></li>
+    <li><a href="#instagram">Instagram</a></li>
+    <li><a href="#about">About</a></li>
+    <li><a href="#booking">Booking</a></li>
+  </ul>
 </nav>
 
-<!-- ─── PAGE: HERO ─── -->
-<div class="page active" id="page-hero">
-  <div class="logo-wrap">
-    <span class="logo-line l1">Partially</span>
-    <span class="logo-line l2">Prescribed</span>
-    <p class="hero-sub">L.A. &nbsp;·&nbsp; Arizona &nbsp;·&nbsp; Underground</p>
-  </div>
-</div>
-
-<!-- ─── PAGE: ARTISTS ─── -->
-<div class="page" id="page-artists">
-  <div class="page-inner">
-    <div class="sec-head">
-      <span class="sec-num">01 //</span>
-      <h2 class="sec-title">Artists</h2>
+<!-- FIXED HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <!-- <p class="hero-eyebrow">Los Angeles &nbsp;/&nbsp; Arizona &nbsp;·&nbsp; Plugg Beats &nbsp;·&nbsp; Underground Shows</p> -->
+    <h1 class="hero-title">
+      <span style="position:relative;display:inline-block">
+        <span class="ht1">Partially</span>
+        <span class="ht1-ghost" aria-hidden="true">Partially</span>
+        <span class="ht1-ghost2" aria-hidden="true">Partially</span>
+      </span>
+      <span class="ht2">Prescribed</span>
+    </h1>
+    <div class="hero-sub">
+      <span class="sub-item">Beat Production</span>
+      <span class="sub-dot"></span>
+      <span class="sub-item">Event Coordination</span>
+      <span class="sub-dot"></span>
+      <span class="sub-item">LA / AZ</span>
     </div>
-    <div class="artists-grid">
+  </div>
 
-      <div class="artist-card">
-        <div class="artist-bg">
-          <svg width="70" height="70" viewBox="0 0 40 40" fill="none">
-            <circle cx="20" cy="7" r="3.5" stroke="#1e1e1e" stroke-width="2"/>
-            <line x1="20" y1="10.5" x2="20" y2="23" stroke="#1e1e1e" stroke-width="2"/>
-            <line x1="20" y1="15"   x2="11" y2="10" stroke="#1e1e1e" stroke-width="2"/>
-            <line x1="20" y1="15"   x2="29" y2="19" stroke="#1e1e1e" stroke-width="2"/>
-            <line x1="20" y1="23"   x2="13" y2="34" stroke="#1e1e1e" stroke-width="2"/>
-            <line x1="20" y1="23"   x2="27" y2="34" stroke="#1e1e1e" stroke-width="2"/>
+  <!-- ARTIST SLIDESHOW -->
+  <div class="hero-slideshow" aria-hidden="true">
+    <div class="ss-frame">
+
+      <div class="ss-slide active">
+        <div class="ss-ph" style="background:radial-gradient(ellipse 65% 70% at 50% 35%,#1e2a1a 0%,#060806 100%)">
+          <svg viewBox="0 0 200 320" width="200" height="320" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-54%);opacity:0.12">
+            <circle cx="100" cy="90" r="52" fill="#fff"/>
+            <ellipse cx="100" cy="260" rx="72" ry="90" fill="#fff"/>
           </svg>
         </div>
-        <div class="artist-info">
-          <div class="artist-name">LACKVILL</div>
-          <div class="artist-genre">PLUGG · CLOUD RAP</div>
-        </div>
+        <div class="ss-fade"></div>
       </div>
 
-      <div class="artist-card">
-        <div class="artist-bg" style="background:#0e0e0e;">
-          <svg width="70" height="70" viewBox="0 0 40 40" fill="none">
-            <circle cx="20" cy="7" r="3.5" stroke="#1e1e1e" stroke-width="2"/>
-            <line x1="20" y1="10.5" x2="20" y2="24" stroke="#1e1e1e" stroke-width="2"/>
-            <line x1="20" y1="14"   x2="9"  y2="14" stroke="#1e1e1e" stroke-width="2"/>
-            <line x1="20" y1="14"   x2="31" y2="14" stroke="#1e1e1e" stroke-width="2"/>
-            <line x1="9"  y1="14"   x2="6"  y2="22" stroke="#1e1e1e" stroke-width="1.5"/>
-            <line x1="31" y1="14"   x2="34" y2="22" stroke="#1e1e1e" stroke-width="1.5"/>
-            <line x1="20" y1="24"   x2="13" y2="35" stroke="#1e1e1e" stroke-width="2"/>
-            <line x1="20" y1="24"   x2="27" y2="35" stroke="#1e1e1e" stroke-width="2"/>
+      <div class="ss-slide">
+        <div class="ss-ph" style="background:radial-gradient(ellipse 65% 70% at 48% 38%,#2a1515 0%,#080405 100%)">
+          <svg viewBox="0 0 200 320" width="200" height="320" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-54%);opacity:0.12">
+            <circle cx="100" cy="90" r="52" fill="#fff"/>
+            <ellipse cx="100" cy="260" rx="72" ry="90" fill="#fff"/>
           </svg>
         </div>
-        <div class="artist-info">
-          <div class="artist-name">BLACKEDY</div>
-          <div class="artist-genre">RAP · UNDERGROUND</div>
-        </div>
+        <div class="ss-fade"></div>
       </div>
 
-      <div class="artist-card">
-        <div class="artist-bg" style="background:#0b0b0b;">
-          <svg width="70" height="70" viewBox="0 0 40 40" fill="none">
-            <circle cx="22" cy="6" r="3.5" stroke="#1e1e1e" stroke-width="2"/>
-            <line x1="22" y1="9.5" x2="17" y2="21" stroke="#1e1e1e" stroke-width="2"/>
-            <line x1="20" y1="15"  x2="10" y2="19" stroke="#1e1e1e" stroke-width="2"/>
-            <line x1="20" y1="15"  x2="30" y2="11" stroke="#1e1e1e" stroke-width="2"/>
-            <line x1="17" y1="21"  x2="9"  y2="31" stroke="#1e1e1e" stroke-width="2"/>
-            <line x1="17" y1="21"  x2="28" y2="29" stroke="#1e1e1e" stroke-width="2"/>
+      <div class="ss-slide">
+        <div class="ss-ph" style="background:radial-gradient(ellipse 65% 70% at 52% 32%,#181818 0%,#040404 100%)">
+          <svg viewBox="0 0 200 320" width="200" height="320" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-54%);opacity:0.12">
+            <circle cx="100" cy="90" r="52" fill="#fff"/>
+            <ellipse cx="100" cy="260" rx="72" ry="90" fill="#fff"/>
           </svg>
         </div>
-        <div class="artist-info">
-          <div class="artist-name">ROCKOUT DANNY</div>
-          <div class="artist-genre">RAGE · TRAP</div>
-        </div>
+        <div class="ss-fade"></div>
       </div>
 
-      <div class="artist-card">
-        <div class="artist-bg" style="background:#090909;">
-          <span style="font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:5px;color:#181818;">COMING SOON</span>
+      <div class="ss-slide">
+        <div class="ss-ph" style="background:radial-gradient(ellipse 65% 70% at 45% 40%,#12181f 0%,#040507 100%)">
+          <svg viewBox="0 0 200 320" width="200" height="320" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-54%);opacity:0.12">
+            <circle cx="100" cy="90" r="52" fill="#fff"/>
+            <ellipse cx="100" cy="260" rx="72" ry="90" fill="#fff"/>
+          </svg>
         </div>
-        <div class="artist-info">
-          <div class="artist-name">???</div>
-          <div class="artist-genre">UNKNOWN · TBA</div>
-        </div>
+        <div class="ss-fade"></div>
       </div>
 
+      <div class="ss-slide">
+        <div class="ss-ph" style="background:radial-gradient(ellipse 65% 70% at 50% 36%,#1f1c12 0%,#070605 100%)">
+          <svg viewBox="0 0 200 320" width="200" height="320" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-54%);opacity:0.12">
+            <circle cx="100" cy="90" r="52" fill="#fff"/>
+            <ellipse cx="100" cy="260" rx="72" ry="90" fill="#fff"/>
+          </svg>
+        </div>
+        <div class="ss-fade"></div>
+      </div>
+
+      <div class="ss-label" id="ssLabel">LACKVILL</div>
+      <div class="ss-counter" id="ssCounter">01 / 05</div>
+      <div class="ss-dots" id="ssDots"></div>
     </div>
   </div>
-</div>
 
-<!-- ─── PAGE: SHOWS ─── -->
-<div class="page" id="page-shows">
-  <div class="page-inner">
-    <div class="sec-head">
-      <span class="sec-num">02 //</span>
-      <h2 class="sec-title">Shows</h2>
-    </div>
+  <span class="hero-corner">Partially Prescribed &nbsp;·&nbsp; 2024</span>
+</section>
 
-    <div class="show-row upcoming">
-      <div class="show-date">MAR<br>13<br>2026</div>
-      <div>
-        <div class="show-title">LACKVILL IN LOS ANGELES</div>
-        <div class="show-venue">BRICKS ROCK BAR — 3661 PORTLAND AVE, LA</div>
-      </div>
-      <div class="show-right">
-        <div style="font-size:10px;letter-spacing:3px;color:var(--dim);">7PM–12AM · ALL AGES</div>
-        <div class="show-tag">TICKETS VIA MYPLOTS</div>
-      </div>
-    </div>
+<!-- SCROLLABLE CONTENT LAYER -->
+<div class="page-content">
 
-    <div class="show-row upcoming">
-      <div class="show-date">APR<br>04<br>2026</div>
-      <div>
-        <div class="show-title">FIRST FRIDAY — PHOENIX AZ</div>
-        <div class="show-venue">UNDISCLOSED VENUE — PHOENIX, AZ</div>
-      </div>
-      <div class="show-right">
-        <div style="font-size:10px;letter-spacing:3px;color:var(--dim);">ALL AGES · ~40 CAP</div>
-        <div class="show-tag">DETAILS TBA</div>
-      </div>
-    </div>
-
-    <div class="show-row" style="opacity:0.32;pointer-events:none;">
-      <div class="show-date">TBA<br>—</div>
-      <div>
-        <div class="show-title">PARTIALLY PRESCRIBED VOL. 3</div>
-        <div class="show-venue">LOCATION TBD</div>
-      </div>
-      <div class="show-right">
-        <div style="font-size:10px;letter-spacing:3px;color:var(--dim);">SUMMER 2026</div>
-        <div class="show-tag">ANNOUNCED SOON</div>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<!-- ─── PAGE: ABOUT ─── -->
-<div class="page" id="page-about">
-  <div class="page-inner">
-    <div class="sec-head">
-      <span class="sec-num">03 //</span>
-      <h2 class="sec-title">About</h2>
-    </div>
-    <div class="about-layout">
-      <div class="about-text">
-        <p><strong>Partially Prescribed</strong> is an underground music collective and event project rooted in plugg, cloud rap, and ambient trap. Started from scratch because the shows we wanted to attend didn't exist yet.</p>
-        <p>We run small, intentional events in LA and Arizona. 40–50 people in a room that was never designed for anyone but you. No corporate backing. No algorithm deciding what makes the cut.</p>
-        <p>The beats come first. The flyers, the rooms, the scene — that's all secondary. But it matters too.</p>
-        <a href="https://soundcloud.com/partiallyprescribed" target="_blank" class="sc-link">SOUNDCLOUD ↗</a>
-      </div>
-      <div class="about-box">
-        <div class="about-stat">
-          <div class="stat-big">50</div>
-          <div class="stat-label">MAX CAPACITY</div>
-        </div>
-        <div class="about-stat">
-          <div class="stat-big" style="color:var(--white);">LA · AZ</div>
-          <div class="stat-label">ACTIVE MARKETS</div>
-        </div>
-      </div>
+  <!-- MARQUEE -->
+  <div class="marquee-wrap">
+    <div class="marquee-track">
+      <!-- <span>PARTIALLY PRESCRIBED</span><span class="accent">✦</span>
+      <span>LOS ANGELES</span><span class="accent">✦</span>
+      <span>ARIZONA</span><span class="accent">✦</span>
+      <span>PLUGG BEATS</span><span class="accent">✦</span>
+      <span>UNDERGROUND SHOWS</span><span class="accent">✦</span>
+      <span>SMALL ROOMS REAL ENERGY</span><span class="accent">✦</span>
+      <span>PARTIALLY PRESCRIBED</span><span class="accent">✦</span>
+      <span>LOS ANGELES</span><span class="accent">✦</span>
+      <span>ARIZONA</span><span class="accent">✦</span>
+      <span>PLUGG BEATS</span><span class="accent">✦</span>
+      <span>UNDERGROUND SHOWS</span><span class="accent">✦</span>
+      <span>SMALL ROOMS REAL ENERGY</span><span class="accent">✦</span> -->
     </div>
   </div>
-</div>
 
-<!-- ─── PAGE: CONTACT ─── -->
-<div class="page" id="page-contact">
-  <div class="page-inner">
-    <div class="sec-head">
-      <span class="sec-num">04 //</span>
-      <h2 class="sec-title">Contact</h2>
+  <!-- SHOWS -->
+  <section class="sec reveal" id="shows">
+    <p class="sec-label">Live Events</p>
+    <h2 class="shows-head"><br><em>SHOWS</em></h2>
+
+    <div>
+      <a href="#" class="show-row">
+        <span class="sd">MAR 13</span>
+        <div class="si">
+          <span class="st">LACKVILL + BLACKEDY</span>
+          <span class="sv">Bricks Rock Bar — Los Angeles, CA · 7PM–12AM</span>
+        </div>
+        <div class="stags">
+          <span class="stag live">Tickets Live</span>
+          <span class="stag">All Ages · Bar 21+</span>
+        </div>
+        <span class="sa">→</span>
+      </a>
+
+      <a href="#" class="show-row">
+        <span class="sd">APR 04</span>
+        <div class="si">
+          <span class="st">FIRST FRIDAY VOL. 2</span>
+          <span class="sv">TBA — Phoenix, AZ</span>
+        </div>
+        <div class="stags">
+          <span class="stag">Announce Soon</span>
+          <span class="stag">Underground</span>
+        </div>
+        <span class="sa">→</span>
+      </a>
+
+      <a href="#" class="show-row">
+        <span class="sd">TBA</span>
+        <div class="si">
+          <span class="st">SUBIIBABI SHOWCASE</span>
+          <span class="sv">Los Angeles, CA</span>
+        </div>
+        <div class="stags">
+          <span class="stag">Stay Tuned</span>
+        </div>
+        <span class="sa">→</span>
+      </a>
+
+      <a href="#" class="show-row">
+        <span class="sd">TBA</span>
+        <div class="si">
+          <span class="st">YARO + KIDSUBI</span>
+          <span class="sv">Arizona</span>
+        </div>
+        <div class="stags">
+          <span class="stag">Stay Tuned</span>
+        </div>
+        <span class="sa">→</span>
+      </a>
     </div>
-    <div class="contact-layout">
-      <div class="contact-block">
-        <h3>BOOKINGS</h3>
-        <p>For artist bookings, venue inquiries,<br>press, or collabs — reach out.</p>
-        <br><br>
-        <h3>FIND US</h3>
-        <p>
-          INSTAGRAM &nbsp;<a href="#">@PARTIALLYPRESCRIBED</a><br>
-          SOUNDCLOUD &nbsp;<a href="https://soundcloud.com/partiallyprescribed" target="_blank">PARTIALLYPRESCRIBED</a>
+  </section>
+
+  <hr class="div">
+
+  <!-- SOUNDS -->
+  <section class="sec reveal" id="sounds">
+    <div class="sounds-grid">
+      <div>
+        <p class="sec-label">Music</p>
+        <h2 class="sounds-title">THE<br><em>SOUND</em></h2>
+        <p class="sounds-body">
+          Plugg. Cloud. Ambient trap. Nocturnal, medicated, floating.
+          Beats built for <em>moods and rooms that we cultivate</em>
+          <br><br>
+          Follow to catch new drops and explore the archive
+        </p>
+        <a href="https://soundcloud.com/partiallyprescribed" class="btn-ghost" target="_blank" style="display:inline-block">Full Profile ↗</a>
+      </div>
+      <div class="sc-wrap">
+        <iframe class="sc-frame" scrolling="no" frameborder="no" allow="autoplay"
+          src="https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/partiallyprescribed&color=%23b4ff39&auto_play=false&hide_related=false&show_comments=false&show_user=true&show_reposts=false&show_teaser=true">
+        </iframe>
+        <p style="font-size:0.55rem;letter-spacing:0.15em;color:rgba(255,255,255,0.15);margin-top:0.75rem;text-transform:uppercase">
+          SoundCloud · @partiallyprescribed
         </p>
       </div>
-      <form class="cf" onsubmit="return false;">
-        <div class="cf-field">
-          <label>Name</label>
-          <input type="text" placeholder="—" autocomplete="off">
+    </div>
+  </section>
+
+  <hr class="div">
+
+  <!-- INSTAGRAM -->
+  <!-- <section class="ig-sec reveal" id="instagram">
+    <div class="ig-header">
+      <h2 class="ig-title">THE<br><em>GRID</em></h2>
+      <div class="ig-handle-wrap">
+        <a href="https://instagram.com/partiallyprescribed" class="ig-handle" target="_blank">@partiallyprescribed</a>
+        <a href="https://instagram.com/partiallyprescribed" class="btn-solid" target="_blank" style="display:inline-block">Follow on IG</a>
+      </div>
+    </div>
+
+    <div class="ig-grid" id="igGrid">
+    </div>
+
+    <div class="ig-footer">
+      <span class="ig-follow-note">Latest from the scene · Updated live on IG</span>
+      <a href="https://instagram.com/partiallyprescribed" class="btn-ghost" target="_blank">View Full Profile ↗</a>
+    </div>
+  </section> -->
+
+  <hr class="div">
+
+  <!-- ABOUT -->
+  <section class="sec reveal" id="about">
+    <div class="about-grid">
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-n"></div>
+          <div class="stat-l"></div>
         </div>
-        <div class="cf-field">
-          <label>Email</label>
-          <input type="email" placeholder="—" autocomplete="off">
+        <div class="stat">
+          <div class="stat-n"></div>
+          <div class="stat-l"></div>
         </div>
-        <div class="cf-field">
-          <label>Message</label>
-          <textarea rows="4" placeholder="—"></textarea>
+        <div class="stat">
+          <div class="stat-n"></div>
+          <div class="stat-l"></div>
         </div>
-        <button class="send-btn" type="submit">SEND ↗</button>
-      </form>
+      </div>
+      <div>
+        <p class="sec-label">About</p>
+        <h2 class="about-head">MUSIC + EVENTS.<br>UNDERGROUND ONLY.</h2>
+        <div class="about-body">
+          <p>
+            <em>Partially Prescribed</em> is a beat production project and underground 
+            event collective. Small shows. Real rooms. 
+            Artists you know and ones to discover
+          </p>
+          <p>
+            The name isn't an accident. <em>Plugg. Cloud rap. Ambient trap.</em> The vibe is the same
+          </p>
+          <p>
+            If you found this page, 
+            you're probably already tapped in. <em>Welcome to the network</em>
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="div">
+
+  <!-- BOOKING -->
+  <div class="booking-wrap reveal" id="booking">
+    <div class="booking-glow"></div>
+    <h2 class="booking-title">WORK<br>WITH US</h2>
+    <p class="booking-sub">Booking · Licensing · Artist Collabs · Press</p>
+    <a href="mailto:booking@partiallyprescribed.com" class="booking-email">
+      BOOKING@PARTIALLYPRESCRIBED.COM
+    </a>
+    <div class="socials">
+      <a href="https://instagram.com/partiallyprescribed" class="soc" target="_blank">Instagram</a>
+      <a href="https://soundcloud.com/partiallyprescribed" class="soc" target="_blank">SoundCloud</a>
+      <a href="#" class="soc">MyPlots</a>
     </div>
   </div>
-</div>
 
-<!-- ─── BACK BTN ─── -->
-<button class="back-btn" id="back-btn">← BACK</button>
+  <footer>
+    <span class="fl"><img src="spinning_logo.gif" width="50px"></span>
+    <span class="fr">© 2026 Partially Prescribed</span>
+  </footer>
+
+</div><!-- end page-content -->
 
 <script>
-  const pages = {
-    hero:    document.getElementById('page-hero'),
-    artists: document.getElementById('page-artists'),
-    shows:   document.getElementById('page-shows'),
-    about:   document.getElementById('page-about'),
-    contact: document.getElementById('page-contact'),
-  };
+// Grain canvas
+(function(){
+  var c=document.getElementById('grain'),ctx=c.getContext('2d');
+  function resize(){c.width=window.innerWidth;c.height=window.innerHeight}
+  resize();
+  window.addEventListener('resize',resize);
+  var frame=0;
+  function draw(){
+    var w=c.width,h=c.height;
+    var img=ctx.createImageData(w,h);
+    var d=img.data;
+    for(var i=0;i<d.length;i+=4){
+      var v=Math.random()*255|0;
+      d[i]=v;d[i+1]=v;d[i+2]=v;d[i+3]=255;
+    }
+    ctx.putImageData(img,0,0);
+    frame++;
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
 
-  const navItems = document.querySelectorAll('.nav-item[data-target]');
-  const backBtn  = document.getElementById('back-btn');
-  let current = 'hero';
+// Instagram placeholder grid
+(function(){
+  var posts=[
+    {type:'vid',badge:'Show',label:'LACKVILL + BLACKEDY',sub:'Mar 13 · LA',
+     grad:'radial-gradient(ellipse at 30% 20%,#1a0e2e,#000)'},
+    {type:'img',label:'BRICKS ROCK BAR',sub:'Flash shot',
+     grad:'radial-gradient(ellipse at 60% 40%,#0d1a0d,#000)'},
+    {type:'vid',label:'CROWD POV',sub:'AZ show',
+     grad:'radial-gradient(ellipse at 50% 60%,#1a0a0a,#000)'},
+    {type:'img',badge:'Event',label:'LACKVILL IN LA',sub:'Flyer · 03/13',
+     grad:'radial-gradient(ellipse at 20% 80%,#0e1a1a,#000)'},
+    {type:'img',label:'KIDSUBI',sub:'Portrait',
+     grad:'radial-gradient(ellipse at 70% 30%,#111111,#000)'},
+    {type:'vid',label:'STAGE POV',sub:'Best underground show in AZ',
+     grad:'radial-gradient(ellipse at 40% 50%,#1a1500,#000)'},
+    {type:'img',badge:'Show',label:'FENIX',sub:'Performance',
+     grad:'radial-gradient(ellipse at 55% 25%,#0a0f1a,#000)'},
+    {type:'img',label:'SUBIIBABI',sub:'Session',
+     grad:'radial-gradient(ellipse at 30% 70%,#120a18,#000)'},
+    {type:'vid',badge:'Event',label:'YARO',sub:'Arizona',
+     grad:'radial-gradient(ellipse at 65% 55%,#0d150d,#000)'},
+    {type:'img',label:'FIRST FRIDAY',sub:'Vol. 1 Recap',
+     grad:'radial-gradient(ellipse at 45% 35%,#1a0f0a,#000)'},
+  ];
 
-  function navigate(target) {
-    if (target === current) return;
+  var grid=document.getElementById('igGrid');
+  if(!grid)return;
 
-    pages[current].classList.remove('active');
-    navItems.forEach(n => n.classList.remove('active'));
+  posts.forEach(function(p){
+    var a=document.createElement('a');
+    a.href='https://instagram.com/partiallyprescribed';
+    a.target='_blank';
+    a.className='ig-tile'+(p.type==='vid'?' vid':'');
 
-    pages[target].classList.add('active');
-    current = target;
+    // silhouette SVG as placeholder content
+    var svgOpacity=p.type==='vid'?'0.07':'0.09';
+    a.innerHTML=
+      '<div class="ig-tile-bg" style="background:'+p.grad+';inset:-5%">'+
+        '<svg viewBox="0 0 100 160" style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:60%;opacity:'+svgOpacity+'" xmlns="http://www.w3.org/2000/svg">'+
+          '<circle cx="50" cy="48" r="28" fill="#fff"/>'+
+          '<ellipse cx="50" cy="130" rx="38" ry="50" fill="#fff"/>'+
+        '</svg>'+
+      '</div>'+
+      (p.badge?'<span class="ig-badge">'+p.badge+'</span>':'')+
+      '<div class="ig-tile-overlay">'+
+        '<div class="ig-tile-meta">'+
+          '<strong>'+p.label+'</strong>'+
+          '<span>'+p.sub+'</span>'+
+        '</div>'+
+      '</div>';
 
-    if (target === 'hero') {
-      backBtn.classList.remove('visible');
-    } else {
-      backBtn.classList.add('visible');
-      const match = [...navItems].find(n => n.dataset.target === target);
-      if (match) match.classList.add('active');
+    grid.appendChild(a);
+  });
+})();
+(function(){
+  var els=document.querySelectorAll('.reveal');
+  var io=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}
+    });
+  },{threshold:0.1});
+  els.forEach(function(el){io.observe(el)});
+})();
+
+// Slideshow
+(function(){
+  var labels=['LACKVILL','BLACKEDY','KIDSUBI','FENIX','YARO'];
+  var slides=document.querySelectorAll('.ss-slide');
+  var labelEl=document.getElementById('ssLabel');
+  var counterEl=document.getElementById('ssCounter');
+  var dotsWrap=document.getElementById('ssDots');
+  var current=0;
+  var timer;
+
+  // build dots
+  labels.forEach(function(_,i){
+    var d=document.createElement('button');
+    d.className='ss-dot'+(i===0?' active':'');
+    d.setAttribute('aria-label','Slide '+(i+1));
+    d.addEventListener('click',function(){goTo(i);resetTimer()});
+    dotsWrap.appendChild(d);
+  });
+
+  function goTo(n){
+    slides[current].classList.remove('active');
+    dotsWrap.children[current].classList.remove('active');
+    current=n;
+    slides[current].classList.add('active');
+    dotsWrap.children[current].classList.add('active');
+    if(labelEl) labelEl.textContent=labels[current];
+    if(counterEl){
+      var s=String(current+1).padStart(2,'0');
+      var t=String(slides.length).padStart(2,'0');
+      counterEl.textContent=s+' / '+t;
     }
   }
 
-  navItems.forEach(btn => {
-    btn.addEventListener('click', () => navigate(btn.dataset.target));
-  });
+  function next(){goTo((current+1)%slides.length)}
 
-  backBtn.addEventListener('click', () => navigate('hero'));
+  function resetTimer(){clearInterval(timer);timer=setInterval(next,3800)}
+
+  resetTimer();
+})();
 </script>
 
 </body>

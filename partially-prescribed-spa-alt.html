@@ -449,8 +449,8 @@
 <nav>
 
   <button class="nav-item" data-target="shows">
-    <svg class="nav-icon s1" viewBox="0 0 40 40" fill="none">
-      <circle cx="20" cy="7" r="3.2" stroke="#b4ff39" stroke-width="1.4"/>
+    <img src="spinning_logo.gif" alt="Logo" width="50px" class="nav-icon s1">
+    <!-- <circle cx="20" cy="7" r="3.2" stroke="#b4ff39" stroke-width="1.4"/>
       <line x1="20" y1="10.2" x2="20" y2="23" stroke="#b4ff39" stroke-width="1.4"/>
       <line x1="20" y1="15"   x2="11" y2="10" stroke="#b4ff39" stroke-width="1.4"/>
       <line x1="20" y1="15"   x2="29" y2="19" stroke="#b4ff39" stroke-width="1.4"/>
@@ -458,26 +458,18 @@
       <line x1="20" y1="23"   x2="27" y2="34" stroke="#b4ff39" stroke-width="1.4"/>
       <circle cx="8"  cy="7"  r="1.2" fill="#b4ff39" opacity="0.5"/>
       <circle cx="33" cy="30" r="1"   fill="#b4ff39" opacity="0.4"/>
-    </svg>
+    </svg> -->
     <span class="nav-label">SHOWS</span>
   </button>
 
-  <button class="nav-item" data-target="artists">
-    <svg class="nav-icon s2" viewBox="0 0 40 40" fill="none">
-      <circle cx="20" cy="7" r="3.2" stroke="#b4ff39" stroke-width="1.4"/>
-      <line x1="20" y1="10.2" x2="20" y2="23" stroke="#b4ff39" stroke-width="1.4"/>
-      <line x1="20" y1="14"   x2="9"  y2="14" stroke="#b4ff39" stroke-width="1.4"/>
-      <line x1="20" y1="14"   x2="31" y2="14" stroke="#b4ff39" stroke-width="1.4"/>
-      <line x1="9"  y1="14"   x2="6"  y2="22" stroke="#b4ff39" stroke-width="1.2"/>
-      <line x1="31" y1="14"   x2="34" y2="22" stroke="#b4ff39" stroke-width="1.2"/>
-      <line x1="20" y1="23"   x2="13" y2="34" stroke="#b4ff39" stroke-width="1.4"/>
-      <line x1="20" y1="23"   x2="27" y2="34" stroke="#b4ff39" stroke-width="1.4"/>
-    </svg>
+  <!-- <button class="nav-item" data-target="artists">
+            <img src="spinning_logo.gif" alt="Logo" class="nav-icon s1">
     <span class="nav-label">ARTISTS</span>
-  </button>
+  </button> -->
 
   <button class="nav-item" data-target="about">
-    <svg class="nav-icon s3" viewBox="0 0 40 40" fill="none">
+    <img src="spinning_logo.gif" alt="Logo" width="50px" class="nav-icon s1">
+    <!-- <svg class="nav-icon s3" viewBox="0 0 40 40" fill="none">
       <circle cx="22" cy="6"  r="3.2" stroke="#b4ff39" stroke-width="1.4"/>
       <line x1="22" y1="9.2"  x2="17" y2="21" stroke="#b4ff39" stroke-width="1.4"/>
       <line x1="19" y1="15"   x2="10" y2="19" stroke="#b4ff39" stroke-width="1.4"/>
@@ -486,12 +478,13 @@
       <line x1="17" y1="21"   x2="28" y2="29" stroke="#b4ff39" stroke-width="1.4"/>
       <line x1="4"  y1="4"    x2="8"  y2="8"  stroke="#b4ff39" stroke-width="1"/>
       <line x1="8"  y1="4"    x2="4"  y2="8"  stroke="#b4ff39" stroke-width="1"/>
-    </svg>
-    <span class="nav-label">ABOUT</span>
+    </svg> -->
+    <span class="nav-label">SOUNDS</span>
   </button>
 
   <button class="nav-item" data-target="booking">
-    <svg class="nav-icon s4" viewBox="0 0 40 40" fill="none">
+         <img src="spinning_logo.gif" alt="Logo" width="50px" class="nav-icon s1">
+    <!-- <svg class="nav-icon s4" viewBox="0 0 40 40" fill="none"> 
       <circle cx="20" cy="8"  r="3.2" stroke="#b4ff39" stroke-width="1.4"/>
       <line x1="20" y1="11.2" x2="20" y2="24" stroke="#b4ff39" stroke-width="1.4"/>
       <line x1="20" y1="16"   x2="11" y2="12" stroke="#b4ff39" stroke-width="1.4"/>
@@ -501,7 +494,7 @@
       <circle cx="7"  cy="22" r="1.4" fill="#b4ff39" opacity="0.6"/>
       <circle cx="35" cy="10" r="1.4" fill="#b4ff39" opacity="0.6"/>
       <circle cx="33" cy="37" r="1"   fill="#b4ff39" opacity="0.35"/>
-    </svg>
+    </svg> -->
     <span class="nav-label">BOOKING</span>
   </button>
 
@@ -510,7 +503,6 @@
 <!-- ── PAGE: HERO ── -->
 <div class="page active" id="page-hero">
   <div>
-    <p class="hero-eyebrow">Los Angeles &nbsp;/&nbsp; Arizona &nbsp;·&nbsp; Plugg Beats &nbsp;·&nbsp; Underground Shows</p>
     <h1 class="hero-title">
       <span style="position:relative;display:inline-block">
         <span class="ht1">Partially</span>
@@ -526,15 +518,11 @@
       <span class="sub-dot"></span>
       <span class="sub-item">LA / AZ</span>
     </div>
-    <div class="hero-cta">
-      <button class="btn-solid" id="hero-shows-btn">Upcoming Shows</button>
-    </div>
     <div style="display:flex;justify-content:center;">
       <div class="sc-hero-embed">
-        <iframe scrolling="no" frameborder="no" allow="autoplay"
+        <iframe id="sc-iframe" scrolling="no" frameborder="no" allow="autoplay"
           src="https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/partiallyprescribed&color=%23b4ff39&auto_play=true&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=false">
         </iframe>
-        <p>SoundCloud &nbsp;·&nbsp; @partiallyprescribed</p>
       </div>
     </div>
   </div>
@@ -543,9 +531,7 @@
 <!-- ── PAGE: SHOWS ── -->
 <div class="page" id="page-shows">
   <div class="page-inner">
-    <p class="sec-label">Live Events</p>
-    <h2 class="shows-head">UPCOMING<br><em>SHOWS</em></h2>
-
+    <h2 class="shows-head"><br><em>SHOWS</em></h2>
     <a href="#" class="show-row">
       <span class="sd">MAR 13</span>
       <div class="si">
@@ -615,8 +601,8 @@
 <!-- ── PAGE: ABOUT ── -->
 <div class="page" id="page-about">
   <div class="page-inner">
-    <div class="about-grid">
-      <div class="stats">
+    <!-- <div class="about-grid"> -->
+      <!-- <div class="stats">
         <div class="stat">
           <div class="stat-n">40–50</div>
           <div class="stat-l">Intimate cap.</div>
@@ -629,28 +615,27 @@
           <div class="stat-n">∞</div>
           <div class="stat-l">Unreleased beats</div>
         </div>
-      </div>
+      </div> -->
       <div>
-        <p class="sec-label">About</p>
+        <p class="sec-label">Sounds</p>
         <h2 class="about-head">MUSIC + EVENTS.<br>UNDERGROUND ONLY.</h2>
         <div class="about-body">
           <p>
             <em>Partially Prescribed</em> is a beat production project and underground
-            event collective between Los Angeles and Arizona. Small shows. Real rooms.
-            Artists you know and ones to discover.
+            event collective. Small shows. Real rooms.
+            Artists you know and ones to discover
           </p>
           <p>
-            The name isn't an accident. The sound is hazy and floating — not trying to be,
-            just honest. <em>Plugg. Cloud rap. Ambient trap.</em> The tag changes.
+            The name is honest. <em>Plugg. Cloud rap. Ambient trap.</em> The tag changes.
             The vibe doesn't.
           </p>
           <p>
             If you found this page,
-            you're probably already tapped in. If not — <em>welcome to the network.</em>
+            you're probably already tapped in. <em>Welcome to the network</em>
           </p>
         </div>
       </div>
-    </div>
+    <!-- </div> -->
   </div>
 </div>
 
@@ -666,7 +651,7 @@
     <div class="socials">
       <a href="https://instagram.com/partiallyprescribed" class="soc" target="_blank">Instagram</a>
       <a href="https://soundcloud.com/partiallyprescribed" class="soc" target="_blank">SoundCloud</a>
-      <a href="#" class="soc">MyPlots</a>
+      <a href="https://myplots.com/t/partially-prescribed" class="soc">MyPlots</a>
     </div>
   </div>
 </div>
@@ -733,7 +718,40 @@ document.getElementById('hero-shows-btn').addEventListener('click', function(){ 
 
 
 
-// ── IG / ARTISTS GRID ──
+// ── SOUNDCLOUD AUTOPLAY ON FIRST INTERACTION ──
+// Browsers block audio autoplay until a user gesture occurs.
+// We load the SC Widget API, attempt immediate play (works for
+// return visitors), then fire play() on the very first interaction.
+(function(){
+  var apiScript = document.createElement('script');
+  apiScript.src = 'https://w.soundcloud.com/player/api.js';
+  apiScript.onload = function(){
+    var iframe = document.getElementById('sc-iframe');
+    if(!iframe) return;
+    var widget = SC.Widget(iframe);
+    var played = false;
+
+    widget.bind(SC.Widget.Events.READY, function(){
+      // Attempt immediate play — succeeds on return visits or
+      // sites with high browser Media Engagement Index
+      widget.play();
+
+      // Fallback: fire on first gesture anywhere on the page
+      function onGesture(){
+        if(played) return;
+        played = true;
+        widget.play();
+        ['click','keydown','touchstart','scroll'].forEach(function(ev){
+          document.removeEventListener(ev, onGesture);
+        });
+      }
+      ['click','keydown','touchstart','scroll'].forEach(function(ev){
+        document.addEventListener(ev, onGesture, { once: true, passive: true });
+      });
+    });
+  };
+  document.head.appendChild(apiScript);
+})();
 (function(){
   var posts = [
     { type:'vid',  badge:'Show',  label:'LACKVILL + BLACKEDY', sub:'Mar 13 · LA',
